@@ -7,10 +7,18 @@
     tools:context=".MainActivity">
 
     <Button
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:id="@+id/timerButton"
+    android:text="Start"
+    android:textSize="50dp"/>
+
+
+    <Button
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/timerButton"
-        android:text="Start"
+        android:layout_height="100dp"
+        android:id="@+id/timerEndButton"
+        android:text="End"
         android:textSize="50dp"/>
 
 </LinearLayout>
