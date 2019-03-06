@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        setTheme(R.style.StyleSplash);
+        //setTheme(R.style.Theme);
 
 
         super.onCreate(savedInstanceState);
