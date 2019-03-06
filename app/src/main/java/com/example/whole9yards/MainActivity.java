@@ -23,6 +23,12 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+
+        setTheme(R.style.StyleSplash);
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -91,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
         else if(isClicked == 1){
-
 
             //cancel timer
             timer.cancel();
