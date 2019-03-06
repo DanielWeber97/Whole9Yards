@@ -4,7 +4,7 @@
 
     <style name="StyleSplash" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
-        <item name="android:windowBackground">@drawable/splash_screen</item>
+        <!--<item name="android:windowBackground">@drawable/footballfield</item>-->
 
     </style>
 
