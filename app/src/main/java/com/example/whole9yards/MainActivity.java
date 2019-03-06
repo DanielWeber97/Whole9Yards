@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     public void startOnClick(View v){
 
 
+        Timer timer = new Timer();
+
         if(isClicked == 0){
 
             startStopTV = findViewById(R.id.startStopTV);
@@ -43,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
             startTime = System.currentTimeMillis();
 
-            Timer timer = new Timer();
+
 
 
 
@@ -90,11 +92,21 @@ public class MainActivity extends AppCompatActivity {
 
         else if(isClicked == 1){
 
-            // reset time
 
+            //cancel timer
+            timer.cancel();
+
+            //reset instance variable
+            minute = 0;
+
+            //rest boolean variable
             isClicked = 0;
+
+            //reset step
             timerTV.setText("00:00");
             startStopTV.setText("Start Job");
+
+
 
 
         }
