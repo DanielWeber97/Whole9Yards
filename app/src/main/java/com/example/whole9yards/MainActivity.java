@@ -24,23 +24,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_home);
 
-       final Intent toHome = new Intent(this, HomeActivity.class);
-
-        new CountDownTimer(700, 1000){
-
-            @Override
-            public void onTick(long l) {
-
-            }
-
-            @Override
-            public void onFinish() {
-
-                startActivity(toHome);
-            }
-        }.start();
+//       final Intent toHome = new Intent(this, HomeActivity.class);
+//
+//        new CountDownTimer(700, 1000){
+//
+//            @Override
+//            public void onTick(long l) {
+//
+//            }
+//
+//            @Override
+//            public void onFinish() {
+//
+//                startActivity(toHome);
+//            }
+//        }.start();
     }
 
 
