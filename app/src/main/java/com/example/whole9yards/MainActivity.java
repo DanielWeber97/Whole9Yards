@@ -13,29 +13,35 @@ import android.view.Window;
 import android.widget.TextView;
 import android.widget.Toast;
 
+
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
+
     private TextView timerTV;
     private TextView startStopTV;
     private long startTime;
     private int minute = 0;
     private int isClicked = 0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
 
 
-
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
+        FirebaseApp.initializeApp(getApplicationContext());
+        FirebaseDatabase database = FirebaseDatabase.getInstance();
 
-
-
+        database.getReference().child("users").setValue("test");
 
 
         //showPopup();
