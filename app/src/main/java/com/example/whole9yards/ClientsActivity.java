@@ -26,11 +26,14 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+
 public class ClientsActivity extends AppCompatActivity {
     Toast t;
     ScrollView scroll;
     LinearLayout list;
     DatabaseReference dbClients;
+    ArrayList<Client> localClients;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +41,12 @@ public class ClientsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_clients);
 
         dbClients = FirebaseDatabase.getInstance().getReference("dbClients");
+        localClients = new ArrayList<Client>();
         createPopup();
         scroll = findViewById(R.id.scroll);
         list = findViewById(R.id.listInScroll);
+
+
     }
 
     @Override
@@ -48,17 +54,34 @@ public class ClientsActivity extends AppCompatActivity {
         super.onStart();
 
         dbClients.addValueEventListener(new ValueEventListener() {
-          @Override
-          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-              for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                 Log.v("mytag",snapshot.getValue().toString());
-              }
-          }
-          @Override
-          public void onCancelled(@NonNull DatabaseError databaseError) {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String idArg = snapshot.child("clientId").getValue().toString();
+                    String nameArg = snapshot.child("clientName").getValue().toString();
+                    String numArg = snapshot.child("clientNumber").getValue().toString();
+                    String addressArg = snapshot.child("clientAddress").getValue().toString();
+                    Client c = new Client(idArg, nameArg, numArg, addressArg);
+                    localClients.add(c);
+                    //for(DataSnapshot field : snapshot.getChildren()) {
+                    //    Log.v("mytag", field.getValue().toString());
+                    //}
+                }
+                for (Client c : localClients) {
+                    TextView t = new TextView(getApplicationContext());
+                    t.setText(c.clientName + "\n        " + c.clientNumber + "\n        "
+                            + c.clientAddress);
+                    list.addView(t);
+                }
+                dbClients.removeEventListener(this);
+            }
 
-          }
-      });
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
     }
 
     //Helper function to prevent toasts from waiting for old toasts
@@ -92,15 +115,18 @@ public class ClientsActivity extends AppCompatActivity {
 
     public void createClient(String name, String num, String address) {
         String id = dbClients.push().getKey();
-        Client client = new Client(id, name, num, address);
-        dbClients.child(id).setValue(client);
+        Client c = new Client(id, name, num, address);
+        dbClients.child(id).setValue(c);
+        TextView t = new TextView(getApplicationContext());
+        t.setText(c.clientName + "\n        " + c.clientNumber + "\n        "
+                            + c.clientAddress);
+        list.addView(t);
         showToast("Client successfully added!");
     }
 
     //This function creates the dialog box that allows the user to enter
     //information about the client.
     public void createPopup() {
-        Log.v("mytag", "create popup called");
         Button showPopup = (Button) findViewById(R.id.popup);
         showPopup.setOnClickListener(new View.OnClickListener() {
             @Override
