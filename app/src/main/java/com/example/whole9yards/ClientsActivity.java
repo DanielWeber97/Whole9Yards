@@ -4,6 +4,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,24 +19,46 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 public class ClientsActivity extends AppCompatActivity {
     Toast t;
     ScrollView scroll;
     LinearLayout list;
+    DatabaseReference dbClients;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clients);
 
-
+        dbClients = FirebaseDatabase.getInstance().getReference("dbClients");
+        createPopup();
         scroll = findViewById(R.id.scroll);
         list = findViewById(R.id.listInScroll);
+    }
 
-        createPopup();
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        dbClients.addValueEventListener(new ValueEventListener() {
+          @Override
+          public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+              for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                 Log.v("mytag",snapshot.getValue().toString());
+              }
+          }
+          @Override
+          public void onCancelled(@NonNull DatabaseError databaseError) {
+
+          }
+      });
     }
 
     //Helper function to prevent toasts from waiting for old toasts
@@ -66,15 +90,17 @@ public class ClientsActivity extends AppCompatActivity {
         }
     }
 
-    public void createClient(String name, String num, String address){
-        TextView tv = new TextView(this);
-        tv.setText(name + "\n        " + num + "\n        " + address);
-        list.addView(tv);
+    public void createClient(String name, String num, String address) {
+        String id = dbClients.push().getKey();
+        Client client = new Client(id, name, num, address);
+        dbClients.child(id).setValue(client);
+        showToast("Client successfully added!");
     }
 
     //This function creates the dialog box that allows the user to enter
     //information about the client.
     public void createPopup() {
+        Log.v("mytag", "create popup called");
         Button showPopup = (Button) findViewById(R.id.popup);
         showPopup.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,7 +137,7 @@ public class ClientsActivity extends AppCompatActivity {
                         } else if (!verify(number.getText().toString())) {
                             showToast("Please enter a valid phone number with the area code");
                         } else {
-                            createClient(name.getText().toString(), number.getText().toString(),address.getText().toString());
+                            createClient(name.getText().toString(), number.getText().toString(), address.getText().toString());
                             dialog.dismiss();
                         }
                     }
