@@ -17,6 +17,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 public class ClientsActivity extends AppCompatActivity {
     Toast t;
     ScrollView scroll;
@@ -26,6 +29,7 @@ public class ClientsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_clients);
+
 
         scroll = findViewById(R.id.scroll);
         list = findViewById(R.id.listInScroll);

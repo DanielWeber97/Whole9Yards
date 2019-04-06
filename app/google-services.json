@@ -1,0 +1,44 @@
+{
+  "project_info": {
+    "project_number": "754164536897",
+    "firebase_url": "https://whole9yards-12160.firebaseio.com",
+    "project_id": "whole9yards-12160",
+    "storage_bucket": "whole9yards-12160.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:754164536897:android:11abcf891e09e0d2",
+        "android_client_info": {
+          "package_name": "com.example.whole9yards"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "754164536897-no4om1ifuk8vqa1dn4ih3evd016v8r8m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.whole9yards",
+            "certificate_hash": "b5afa480ca40522e2b364775fc0214a45c9b5b19"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTIrFf26XFd7LAq_vcdTZUBb4EFktgbkQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "754164536897-62t40nlafp92ao3v2l2qrsp45qun3ckc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

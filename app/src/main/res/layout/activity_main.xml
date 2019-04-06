@@ -55,6 +55,7 @@
             android:layout_marginBottom="5dp"
             android:layout_weight=".5"
             android:background="@color/white"
+            android:onClick="calendar"
             android:clickable="true"
             android:foreground="?android:attr/selectableItemBackground"
             app:cardCornerRadius="5dp">
@@ -94,6 +95,7 @@
             android:layout_weight=".5"
             android:background="@color/white"
             android:clickable="true"
+            android:onClick="map"
             android:foreground="?android:attr/selectableItemBackground"
             app:cardCornerRadius="5dp">
 
@@ -138,6 +140,7 @@
             android:layout_weight=".5"
             android:background="@color/white"
             android:clickable="true"
+            android:onClick="takePicture"
             android:foreground="?android:attr/selectableItemBackground"
             app:cardCornerRadius="5dp">
 
@@ -177,6 +180,7 @@
             android:background="@color/white"
             android:clickable="true"
             android:foreground="?android:attr/selectableItemBackground"
+            android:onClick="clients"
             app:cardCornerRadius="5dp">
 
             <LinearLayout
@@ -196,7 +200,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center_horizontal"
-                    android:text="Contacts"
+                    android:text="Clients"
                     android:textSize="30dp" />
 
             </LinearLayout>
