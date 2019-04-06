@@ -8,7 +8,6 @@
         android:id="@+id/popup"
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:onClick="addClient"
         android:text="show popup"/>
 
     <ScrollView
