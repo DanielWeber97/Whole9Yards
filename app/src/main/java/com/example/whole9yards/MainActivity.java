@@ -46,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         db = FirebaseDatabase.getInstance();
         dbRef=db.getReference("FIREBASE");
 
