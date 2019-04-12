@@ -47,6 +47,7 @@ public class ClientsActivity extends AppCompatActivity {
         list = findViewById(R.id.listInScroll);
 
 
+
     }
 
     @Override
@@ -111,6 +112,7 @@ public class ClientsActivity extends AppCompatActivity {
         } else {
             return true;
         }
+
     }
 
     public void createClient(String name, String num, String address) {
@@ -127,6 +129,7 @@ public class ClientsActivity extends AppCompatActivity {
     //This function creates the dialog box that allows the user to enter
     //information about the client.
     public void createPopup() {
+
         Button showPopup = (Button) findViewById(R.id.popup);
         showPopup.setOnClickListener(new View.OnClickListener() {
             @Override

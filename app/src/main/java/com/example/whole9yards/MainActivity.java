@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.CountDownTimer;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -11,11 +12,20 @@ import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.Window;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.SignInButton;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.signin.SignInOptions;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -27,7 +37,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
 
 
     private TextView timerTV;
@@ -41,10 +51,35 @@ public class MainActivity extends AppCompatActivity {
     FirebaseDatabase db;
     DatabaseReference dbRef;
 
+    private SignInButton signIn;
+    private GoogleApiClient googleApiClient;
+    private static final int REQ_Code = 9000;
+
+
+    private LinearLayout linearLayoutProfile;
+    private Button signOut;
+    private TextView name, email;
+    private ImageView profilepic;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        linearLayoutProfile = (LinearLayout) findViewById(R.id.profileSectionLL); //1922
+        signOut = (Button) findViewById(R.id.SignOutButton);
+        name = (TextView) findViewById(R.id.nameID);
+        email = (TextView) findViewById(R.id.emailID);
+        profilepic = (ImageView) findViewById(R.id.profilePicID);
+        signOut.setOnClickListener(this);
+        linearLayoutProfile.setVisibility(View.GONE);
+
+
+        signIn = (SignInButton) findViewById(R.id.login_button);
+        signIn.setOnClickListener(this);
+
+        GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
 
 
         db = FirebaseDatabase.getInstance();
@@ -194,4 +229,32 @@ public class MainActivity extends AppCompatActivity {
         dbRef.push().setValue(s);
     }
 
+    @Override
+    public void onClick(View v) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    private void signIn(){
+
+        signIn();
+        //22
+
+
+    }
+
+    private void handleResult(GoogleSignInResult result){
+
+
+
+    }
+
+    private void updateUI(boolean isLogin){
+
+
+    }
 }
