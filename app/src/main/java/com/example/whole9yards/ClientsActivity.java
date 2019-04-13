@@ -3,8 +3,13 @@ package com.example.whole9yards;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Matrix;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -13,6 +18,7 @@ import android.view.View;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
@@ -26,6 +32,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class ClientsActivity extends AppCompatActivity {
@@ -34,6 +43,7 @@ public class ClientsActivity extends AppCompatActivity {
     LinearLayout list;
     DatabaseReference dbClients;
     ArrayList<Client> localClients;
+    final int IMAGE_CODE = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,6 +93,9 @@ public class ClientsActivity extends AppCompatActivity {
         });
 
     }
+
+
+
 
     //Helper function to prevent toasts from waiting for old toasts
     //to finish before displaying.
