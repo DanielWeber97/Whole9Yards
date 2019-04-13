@@ -2,8 +2,14 @@ package com.example.whole9yards;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.CountDownTimer;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,6 +18,7 @@ import android.view.ContextThemeWrapper;
 import android.view.View;
 import android.view.Window;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,6 +26,10 @@ import android.widget.Toast;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.ParsePosition;
@@ -36,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     private int minute = 0;
     private int isClicked = 0;
     private Toast toast;
+    private final int IMAGE_CODE = 123;
+    ImageView image;
 
     //Firebase
     FirebaseDatabase db;
@@ -47,7 +60,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         db = FirebaseDatabase.getInstance();
-        dbRef=db.getReference("FIREBASE");
+        dbRef = db.getReference("FIREBASE");
+        image = findViewById(R.id.imageView);
 
         //showPopup();
     }
@@ -57,9 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
 
         Timer timer = new Timer();
-
         if (isClicked == 0) {
-
             startStopTV = findViewById(R.id.startStopTV);
             startStopTV.setText("Stop Job");
 
@@ -127,28 +139,71 @@ public class MainActivity extends AppCompatActivity {
     }
 
     //This method takes the user to the Google Calendar API
-    public void calendar(View v){
+    public void calendar(View v) {
         showToast("Open calendar activity");
     }
 
     //This method takes the user to the Google Maps API
-    public void map(View v){
+    public void map(View v) {
         showToast("Open map activity");
     }
 
     //This method opens the camera to take a confirmation picture.
-    public void takePicture(View v){
+    public void takePicture(View v) {
+        capture();
         showToast("Open camera");
     }
+
+
+    public void capture() {
+        File file  = new File(Environment.getExternalStorageDirectory(), (System.currentTimeMillis() + ".jpg"));
+        Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+
+        Uri uri = FileProvider.getUriForFile(
+                this,
+                getApplicationContext()
+                        .getPackageName() + ".provider", file);
+      //  i.setDataAndType(uri, "image/*");
+        File imageFile = new File(uri.getPath());
+        Log.v("mytag", uri.getPath());
+        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        i.putExtra("fileUri", uri);
+        startActivityForResult(i,IMAGE_CODE);
+
+
+        Bitmap bitmap = null;
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+        try {
+            bitmap = BitmapFactory.decodeStream(new FileInputStream(imageFile), null, options);
+            Log.v("mytag",bitmap.toString());
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            Log.v("mytag","file not found");
+        }
+        image.setImageBitmap(bitmap);
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent x) {
+        if (resultCode == RESULT_OK && requestCode == IMAGE_CODE) {
+            Log.v("mytag", "file saved");
+        }
+
+
+
+    }
+
 
     //This method takes the user to the client screen where
     //they can view all of the current clients. They can
     //also add or delete clients.
-    public void clients(View v){
-        Intent x = new Intent(this,ClientsActivity.class);
+    public void clients(View v) {
+        Intent x = new Intent(this, ClientsActivity.class);
         startActivity(x);
     }
-
 
 
     public void showPopup(View v) {
@@ -172,8 +227,8 @@ public class MainActivity extends AppCompatActivity {
     //Helper method to show a toast with the given String.
     //Overrides current toast to prevent them from staying
     //on screen for too long.
-    public void showToast(String message){
-        if (toast!=null){
+    public void showToast(String message) {
+        if (toast != null) {
             toast.cancel();
         }
         toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
