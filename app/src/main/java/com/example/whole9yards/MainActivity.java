@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,11 +21,16 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.signin.SignInOptions;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -57,8 +63,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     private LinearLayout linearLayoutProfile;
+    private LinearLayout linearLayoutSignIn;
     private Button signOut;
-    private TextView name, email;
+    private TextView Name, Email;
     private ImageView profilepic;
 
 
@@ -68,9 +75,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         linearLayoutProfile = (LinearLayout) findViewById(R.id.profileSectionLL); //1922
+        linearLayoutSignIn = (LinearLayout) findViewById(R.id.SignInButtonLL);
         signOut = (Button) findViewById(R.id.SignOutButton);
-        name = (TextView) findViewById(R.id.nameID);
-        email = (TextView) findViewById(R.id.emailID);
+        Name = (TextView) findViewById(R.id.nameID);
+        Email = (TextView) findViewById(R.id.emailID);
         profilepic = (ImageView) findViewById(R.id.profilePicID);
         signOut.setOnClickListener(this);
         linearLayoutProfile.setVisibility(View.GONE);
@@ -80,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         signIn.setOnClickListener(this);
 
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
+        googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions).build();
 
 
         db = FirebaseDatabase.getInstance();
@@ -232,6 +241,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
 
+        switch (v.getId()){
+
+            case R.id.login_button:
+                signIn();
+                break;
+            case R.id.SignOutButton:
+                signOut();
+                break;
+        }
+
     }
 
     @Override
@@ -241,13 +260,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void signIn(){
 
-        signIn();
-        //22
+
+        Intent intent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+        startActivityForResult(intent, REQ_Code);
+
+
+    }
+
+    private void signOut(){
+
+        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(@NonNull Status status) {
+                 updateUI(false);
+            }
+        });
 
 
     }
 
     private void handleResult(GoogleSignInResult result){
+
+        if(result.isSuccess() ){
+
+            GoogleSignInAccount signInAccount = result.getSignInAccount();
+            String name = signInAccount.getDisplayName();
+            String email = signInAccount.getEmail();
+            //String img_url = signInAccount.getPhotoUrl().toString();
+
+            Name.setText(name);
+            Email.setText(email);
+            //Glide.with(this).load(img_url).into(profilepic);
+
+            updateUI(true);
+        }
+        else{
+
+            updateUI(false);
+        }
 
 
 
@@ -255,6 +305,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void updateUI(boolean isLogin){
 
+        if(isLogin){
 
+            linearLayoutProfile.setVisibility(View.VISIBLE);
+            linearLayoutSignIn.setVisibility(View.GONE);
+            signIn.setVisibility(View.GONE);
+        }
+        else{
+
+            linearLayoutProfile.setVisibility(View.GONE);
+            linearLayoutSignIn.setVisibility(View.VISIBLE);
+            signIn.setVisibility(View.VISIBLE);
+        }
+
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(REQ_Code == requestCode){
+
+            GoogleSignInResult resultOfGoogleSignIn = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleResult(resultOfGoogleSignIn);
+        }
     }
 }
