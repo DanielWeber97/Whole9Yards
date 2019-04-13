@@ -40,7 +40,6 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
 
-
     private TextView timerTV;
     private TextView startStopTV;
     private long startTime;
@@ -49,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     private Toast toast;
     private final int IMAGE_CODE = 123;
     ImageView image;
+    private File confImgFile;
 
     //Firebase
     FirebaseDatabase db;
@@ -61,23 +61,20 @@ public class MainActivity extends AppCompatActivity {
 
         db = FirebaseDatabase.getInstance();
         dbRef = db.getReference("FIREBASE");
-        image = findViewById(R.id.imageView);
+        confImgFile = null;
 
-        //showPopup();
     }
 
-
+    //This method starts the timer. This will eventually
+    //be automated to start and stop based on the Geofence.
     public void startOnClick(View v) {
-
 
         Timer timer = new Timer();
         if (isClicked == 0) {
             startStopTV = findViewById(R.id.startStopTV);
             startStopTV.setText("Stop Job");
 
-
             startTime = System.currentTimeMillis();
-
 
             timer.scheduleAtFixedRate(new TimerTask() {
 
@@ -134,8 +131,6 @@ public class MainActivity extends AppCompatActivity {
 
 
         }
-
-
     }
 
     //This method takes the user to the Google Calendar API
@@ -150,50 +145,50 @@ public class MainActivity extends AppCompatActivity {
 
     //This method opens the camera to take a confirmation picture.
     public void takePicture(View v) {
-        capture();
-        showToast("Open camera");
-    }
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        // Create a File reference for the file of the image taken in the Camera application
+        confImgFile = getPhotoUri(System.currentTimeMillis() + ".jpg");
 
+        // wrap File object into a content provider
+        Uri fileProvider = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".provider", confImgFile);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileProvider);
 
-    public void capture() {
-        File file  = new File(Environment.getExternalStorageDirectory(), (System.currentTimeMillis() + ".jpg"));
-        Intent i = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        Uri uri = FileProvider.getUriForFile(
-                this,
-                getApplicationContext()
-                        .getPackageName() + ".provider", file);
-      //  i.setDataAndType(uri, "image/*");
-        File imageFile = new File(uri.getPath());
-        Log.v("mytag", uri.getPath());
-        i.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        i.putExtra("fileUri", uri);
-        startActivityForResult(i,IMAGE_CODE);
-
-
-        Bitmap bitmap = null;
-        BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        try {
-            bitmap = BitmapFactory.decodeStream(new FileInputStream(imageFile), null, options);
-            Log.v("mytag",bitmap.toString());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            Log.v("mytag","file not found");
+        // If you call startActivityForResult() using an intent that no app can handle, your app will crash.
+        // So as long as the result is not null, it's safe to use the intent.
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            // Start the image capture intent to take photo
+            startActivityForResult(intent, IMAGE_CODE);
         }
-        image.setImageBitmap(bitmap);
-
     }
 
+    //Used in testing to make sure that the file was properly saved.
+    //Now only useful to remind user that they didn't take the picture.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent x) {
-        if (resultCode == RESULT_OK && requestCode == IMAGE_CODE) {
-            Log.v("mytag", "file saved");
+        if (requestCode == IMAGE_CODE) {
+            if (resultCode == RESULT_OK) {
+                Bitmap takenImage = BitmapFactory.decodeFile(confImgFile.getAbsolutePath());
+            } else { // Result was a failure
+                Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+
+    public File getPhotoUri(String name) {
+        // Get safe storage directory for photos
+        // Use `getExternalFilesDir` on Context to access package-specific directories.
+        File mediaStorageDir = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "Whole9Yards");
+
+        // Create the storage directory if it does not exist
+        if (!mediaStorageDir.exists() && !mediaStorageDir.mkdirs()) {
+            Log.v("mytag", "failed to create directory");
         }
 
+        // Return the file target for the photo based on filename
+        File file = new File(mediaStorageDir.getPath() + File.separator + name);
 
-
+        return file;
     }
 
 
@@ -205,8 +200,9 @@ public class MainActivity extends AppCompatActivity {
         startActivity(x);
     }
 
-
-    public void showPopup(View v) {
+    //This method creates a popup to let the user know that their confirmation
+    //picture has been emailed to the boss and client.
+    public void showPopup() {
         String[] singleChoiceItems = {"Thanks for working today!\nA confirmation email has been sent to your boss and client."};
         int itemSelected = 0;
         android.app.Dialog dialog = new AlertDialog.Builder(this)
@@ -234,18 +230,4 @@ public class MainActivity extends AppCompatActivity {
         toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
         toast.show();
     }
-
-    public void taskCompleted() {
-        //send email to boss and client
-
-    }
-
-
-    public void pushTestData(View v) {
-        EditText t = findViewById(R.id.text);
-        String s = t.getText().toString();
-
-        dbRef.push().setValue(s);
-    }
-
 }
