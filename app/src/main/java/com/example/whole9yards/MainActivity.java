@@ -4,6 +4,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.CountDownTimer;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -68,6 +69,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView Name, Email;
     private ImageView profilepic;
 
+    private LinearLayout send;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +96,89 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         db = FirebaseDatabase.getInstance();
         dbRef=db.getReference("FIREBASE");
+
+        ////////////
+
+
+        Mail mail = new Mail();
+        try {
+            mail.send();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
+        /////////////////////////////////////////////////////////////
+
+
+        send = (LinearLayout) findViewById(R.id.send);
+
+        send.setOnClickListener(new View.OnClickListener() {
+
+
+
+            public void onClick(View v) {
+
+                // TODO Auto-generated method stub
+
+                new Thread(new Runnable() {
+
+                    public void run() {
+
+                        try {
+
+                            GMailSender sender = new GMailSender(
+
+                                    "whole9yardsapp@gmail.com",
+
+                                    "Iphone$1234");
+
+
+
+                            //sender.addAttachment(Environment.getExternalStorageDirectory().getPath()+"/image.jpg");
+
+                            sender.sendMail("Test mail", "This mail has been sent from android app along with attachment",
+
+                                    "whole9yardsapp@gmail.com",
+
+                                    "zglontz@gmail.com");
+
+
+
+
+
+
+
+
+
+                        } catch (Exception e) {
+
+                            Toast.makeText(getApplicationContext(),"Error",Toast.LENGTH_LONG).show();
+
+
+
+                        }
+
+                    }
+
+                }).start();
+
+            }
+
+        });
+
+
+
+
+
+
+
+
+
+
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////
 
         //showPopup();
     }
@@ -330,5 +416,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             GoogleSignInResult resultOfGoogleSignIn = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
             handleResult(resultOfGoogleSignIn);
         }
+    }
+
+    public void sendEmail(View v){
+
+
+
     }
 }
