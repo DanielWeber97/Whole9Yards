@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -22,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ScrollView;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -36,6 +39,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class ClientsActivity extends AppCompatActivity {
     Toast t;
@@ -44,7 +49,9 @@ public class ClientsActivity extends AppCompatActivity {
     DatabaseReference dbClients;
     ArrayList<Client> localClients;
     final int IMAGE_CODE = 123;
-
+    Button remove;
+    ArrayList<Integer> toDelete;
+HashMap<Integer, String> cliLocalToDatabase;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,7 +62,9 @@ public class ClientsActivity extends AppCompatActivity {
         createPopup();
         scroll = findViewById(R.id.scroll);
         list = findViewById(R.id.listInScroll);
-
+        remove = findViewById(R.id.remove);
+        toDelete = new ArrayList<Integer>();
+        cliLocalToDatabase = new HashMap<Integer, String>();
 
     }
 
@@ -76,12 +85,10 @@ public class ClientsActivity extends AppCompatActivity {
                     //for(DataSnapshot field : snapshot.getChildren()) {
                     //    Log.v("mytag", field.getValue().toString());
                     //}
+                cliLocalToDatabase.put(cliLocalToDatabase.size(),idArg);
                 }
                 for (Client c : localClients) {
-                    TextView t = new TextView(getApplicationContext());
-                    t.setText(c.clientName + "\n        " + c.clientNumber + "\n        "
-                            + c.clientAddress);
-                    list.addView(t);
+                  addCliToList(c);
                 }
                 dbClients.removeEventListener(this);
             }
@@ -93,8 +100,6 @@ public class ClientsActivity extends AppCompatActivity {
         });
 
     }
-
-
 
 
     //Helper function to prevent toasts from waiting for old toasts
@@ -130,11 +135,50 @@ public class ClientsActivity extends AppCompatActivity {
         String id = dbClients.push().getKey();
         Client c = new Client(id, name, num, address);
         dbClients.child(id).setValue(c);
+        addCliToList(c);
+        showToast("Client successfully added!");
+    }
+
+    public void addCliToList(Client c){
+        final CardView cv = new CardView(this);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        lp.setMargins(20,10,20,10);
+        cv.setLayoutParams(lp);
+        cv.setRadius(15);
+
         TextView t = new TextView(getApplicationContext());
         t.setText(c.clientName + "\n        " + c.clientNumber + "\n        "
-                            + c.clientAddress);
-        list.addView(t);
-        showToast("Client successfully added!");
+                + c.clientAddress);
+        cv.addView(t);
+        list.addView(cv);
+        cv.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                if(cv.getCardBackgroundColor().getDefaultColor() == Color.RED){
+                    toDelete.remove(list.indexOfChild(cv));
+                    cv.setCardBackgroundColor(Color.WHITE);
+                    if(toDelete.size() == 0){remove.setVisibility(View.GONE);}
+                } else{
+                    toDelete.add(list.indexOfChild(cv));
+                    cv.setCardBackgroundColor(Color.RED);
+                    remove.setVisibility(View.VISIBLE);
+                }
+                return false;
+            }
+        });
+    }
+
+    public void deleteClient(View v){
+        for (int i = 0; i < toDelete.size(); i++){
+            list.removeViewAt(i);
+            toDelete.remove(i);
+            dbClients.child(cliLocalToDatabase.get(i)).removeValue();
+            cliLocalToDatabase.remove(i);
+            i--;
+        }
     }
 
     //This function creates the dialog box that allows the user to enter
