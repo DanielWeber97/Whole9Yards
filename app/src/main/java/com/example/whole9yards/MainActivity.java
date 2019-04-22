@@ -33,16 +33,26 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.signin.SignInOptions;
+import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.ParsePosition;
 import java.util.Date;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
+
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
 
@@ -111,61 +121,59 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         /////////////////////////////////////////////////////////////
 
 
-        send = (LinearLayout) findViewById(R.id.send);
-
-        send.setOnClickListener(new View.OnClickListener() {
-
-
-
-            public void onClick(View v) {
-
-                // TODO Auto-generated method stub
-
-                new Thread(new Runnable() {
-
-                    public void run() {
-
-                        try {
-
-                            GMailSender sender = new GMailSender(
-
-                                    "whole9yardsapp@gmail.com",
-
-                                    "Iphone$1234");
-
-
-
-                            //sender.addAttachment(Environment.getExternalStorageDirectory().getPath()+"/image.jpg");
-
-                            sender.sendMail("Test mail", "This mail has been sent from android app along with attachment",
-
-                                    "whole9yardsapp@gmail.com",
-
-                                    "zglontz@gmail.com");
-
-
-
-
-
-
-
-
-
-                        } catch (Exception e) {
-
-                            Toast.makeText(getApplicationContext(),"Error",Toast.LENGTH_LONG).show();
-
-
-
-                        }
-
-                    }
-
-                }).start();
-
-            }
-
-        });
+//        send = (LinearLayout) findViewById(R.id.send);
+//
+//        send.setOnClickListener(new View.OnClickListener() {
+//
+//
+//
+//            public void onClick(View v) {
+//
+//                new Thread(new Runnable() {
+//
+//                    public void run() {
+//
+//                        try {
+//
+//                            GMailSender sender = new GMailSender(
+//
+//                                    "whole9yardsapp@gmail.com",
+//
+//                                    "Iphone$1234");
+//
+//
+//
+//                            //sender.addAttachment(Environment.getExternalStorageDirectory().getPath()+"/image.jpg");
+//
+//                            sender.sendMail("Test mail", "This mail has been sent from android app along with attachment",
+//
+//                                    "whole9yardsapp@gmail.com",
+//
+//                                    "zglontz@gmail.com");
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//                        } catch (Exception e) {
+//
+//                            Toast.makeText(getApplicationContext(),"Error",Toast.LENGTH_LONG).show();
+//
+//
+//
+//                        }
+//
+//                    }
+//
+//                }).start();
+//
+//            }
+//
+//        });
 
 
 
@@ -423,4 +431,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     }
+
+
+
 }
