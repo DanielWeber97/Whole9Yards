@@ -141,16 +141,16 @@ public class ClientsActivity extends AppCompatActivity {
         dbClients.child(id).setValue(c);
         addCliToList(c);
         showToast("Client successfully added!");
+        ids.put(name, id);
     }
 
-    public void addCliToList(Client c) {
+    public void addCliToList(final Client c) {
         final CardView cv = new CardView(this);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         lp.setMargins(20, 10, 20, 10);
-
         cv.setLayoutParams(lp);
         cv.setRadius(15);
 
@@ -179,6 +179,10 @@ public class ClientsActivity extends AppCompatActivity {
                     } else {
                         selectedIndex = list.indexOfChild(cv);
                         selectedId = ids.get(t1.getText().toString());
+                        if(selectedId == null){
+                            selectedId= ids.get(c.clientName);
+                        }
+                        Log.v("mytag", "In onLongClick. selectedId: " + selectedId);
                         cv.setCardBackgroundColor(Color.RED);
                         remove.setVisibility(View.VISIBLE);
                         selected = true;
@@ -193,6 +197,7 @@ public class ClientsActivity extends AppCompatActivity {
     public void deleteClient(View v) {
         if (selected) {
             list.removeViewAt(selectedIndex);
+            Log.v("mytag", "selectedId: " + selectedId);
             dbClients.child(selectedId).removeValue();
             selected = false;
             remove.setVisibility(View.GONE);
