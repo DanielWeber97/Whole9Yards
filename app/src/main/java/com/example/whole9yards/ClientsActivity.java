@@ -50,8 +50,11 @@ public class ClientsActivity extends AppCompatActivity {
     ArrayList<Client> localClients;
     final int IMAGE_CODE = 123;
     Button remove;
-    ArrayList<Integer> toDelete;
-HashMap<Integer, String> cliLocalToDatabase;
+    boolean selected;
+    int selectedIndex;
+    String selectedId;
+    HashMap<String, String> ids;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,9 +66,10 @@ HashMap<Integer, String> cliLocalToDatabase;
         scroll = findViewById(R.id.scroll);
         list = findViewById(R.id.listInScroll);
         remove = findViewById(R.id.remove);
-        toDelete = new ArrayList<Integer>();
-        cliLocalToDatabase = new HashMap<Integer, String>();
-
+        selected = false;
+        selectedIndex = -1;
+        ids = new HashMap<String, String>();
+        selectedId = "";
     }
 
     @Override
@@ -82,13 +86,13 @@ HashMap<Integer, String> cliLocalToDatabase;
                     String addressArg = snapshot.child("clientAddress").getValue().toString();
                     Client c = new Client(idArg, nameArg, numArg, addressArg);
                     localClients.add(c);
+                    ids.put(nameArg, idArg);
                     //for(DataSnapshot field : snapshot.getChildren()) {
                     //    Log.v("mytag", field.getValue().toString());
                     //}
-                cliLocalToDatabase.put(cliLocalToDatabase.size(),idArg);
                 }
                 for (Client c : localClients) {
-                  addCliToList(c);
+                    addCliToList(c);
                 }
                 dbClients.removeEventListener(this);
             }
@@ -139,45 +143,55 @@ HashMap<Integer, String> cliLocalToDatabase;
         showToast("Client successfully added!");
     }
 
-    public void addCliToList(Client c){
+    public void addCliToList(Client c) {
         final CardView cv = new CardView(this);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        lp.setMargins(20,10,20,10);
+        lp.setMargins(20, 10, 20, 10);
         cv.setLayoutParams(lp);
         cv.setRadius(15);
 
-        TextView t = new TextView(getApplicationContext());
-        t.setText(c.clientName + "\n        " + c.clientNumber + "\n        "
-                + c.clientAddress);
-        cv.addView(t);
+
+        TextView t1 = new TextView(getApplicationContext());
+        TextView t2 = new TextView(getApplicationContext());
+        TextView t3 = new TextView(getApplicationContext());
+        t1.setText(c.clientName);
+        t2.setText(c.clientNumber);
+        t3.setText(c.clientAddress);
+        cv.addView(t1);
+        cv.addView(t2);
+        cv.addView(t3);
         list.addView(cv);
         cv.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                if(cv.getCardBackgroundColor().getDefaultColor() == Color.RED){
-                    toDelete.remove(list.indexOfChild(cv));
-                    cv.setCardBackgroundColor(Color.WHITE);
-                    if(toDelete.size() == 0){remove.setVisibility(View.GONE);}
-                } else{
-                    toDelete.add(list.indexOfChild(cv));
-                    cv.setCardBackgroundColor(Color.RED);
-                    remove.setVisibility(View.VISIBLE);
+                if(!selected || list.getChildAt(selectedIndex) == cv){
+                    if (cv.getCardBackgroundColor().getDefaultColor() == Color.RED) {
+                        cv.setCardBackgroundColor(Color.WHITE);
+                        selected = false;
+                    } else {
+                        selectedIndex = list.indexOfChild(cv);
+                        selectedId = ids.get(((TextView) cv.getChildAt(0)).getText().toString());
+                        Log.v("mytag",selectedId);
+                        cv.setCardBackgroundColor(Color.RED);
+                        remove.setVisibility(View.VISIBLE);
+                        selected = true;
+                    }
+                    return false;
                 }
                 return false;
             }
         });
     }
 
-    public void deleteClient(View v){
-        for (int i = 0; i < toDelete.size(); i++){
-            list.removeViewAt(i);
-            toDelete.remove(i);
-            dbClients.child(cliLocalToDatabase.get(i)).removeValue();
-            cliLocalToDatabase.remove(i);
-            i--;
+    public void deleteClient(View v) {
+        if (selected) {
+            list.removeViewAt(selectedIndex);
+            Log.v("mytag", selectedId);
+            dbClients.child(selectedId).removeValue();
+            selected = false;
         }
     }
 
