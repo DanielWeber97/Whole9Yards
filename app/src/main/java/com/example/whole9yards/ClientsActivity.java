@@ -150,19 +150,23 @@ public class ClientsActivity extends AppCompatActivity {
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
         lp.setMargins(20, 10, 20, 10);
+
         cv.setLayoutParams(lp);
         cv.setRadius(15);
 
-
-        TextView t1 = new TextView(getApplicationContext());
+        LinearLayout l = new LinearLayout(getApplicationContext());
+        l.setLayoutParams(lp);
+        l.setOrientation(LinearLayout.VERTICAL);
+       final TextView t1 = new TextView(getApplicationContext());
         TextView t2 = new TextView(getApplicationContext());
         TextView t3 = new TextView(getApplicationContext());
         t1.setText(c.clientName);
         t2.setText(c.clientNumber);
         t3.setText(c.clientAddress);
-        cv.addView(t1);
-        cv.addView(t2);
-        cv.addView(t3);
+        l.addView(t1);
+        l.addView(t2);
+        l.addView(t3);
+        cv.addView(l);
         list.addView(cv);
         cv.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
@@ -170,11 +174,11 @@ public class ClientsActivity extends AppCompatActivity {
                 if(!selected || list.getChildAt(selectedIndex) == cv){
                     if (cv.getCardBackgroundColor().getDefaultColor() == Color.RED) {
                         cv.setCardBackgroundColor(Color.WHITE);
+                        remove.setVisibility(View.GONE);
                         selected = false;
                     } else {
                         selectedIndex = list.indexOfChild(cv);
-                        selectedId = ids.get(((TextView) cv.getChildAt(0)).getText().toString());
-                        Log.v("mytag",selectedId);
+                        selectedId = ids.get(t1.getText().toString());
                         cv.setCardBackgroundColor(Color.RED);
                         remove.setVisibility(View.VISIBLE);
                         selected = true;
@@ -189,9 +193,9 @@ public class ClientsActivity extends AppCompatActivity {
     public void deleteClient(View v) {
         if (selected) {
             list.removeViewAt(selectedIndex);
-            Log.v("mytag", selectedId);
             dbClients.child(selectedId).removeValue();
             selected = false;
+            remove.setVisibility(View.GONE);
         }
     }
 
