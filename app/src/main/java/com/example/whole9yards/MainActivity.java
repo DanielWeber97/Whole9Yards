@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -39,6 +42,9 @@ import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.signin.SignInOptions;
 import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 import com.google.firebase.database.DatabaseReference;
@@ -54,6 +60,7 @@ import java.text.DateFormat;
 import java.text.FieldPosition;
 import java.text.ParsePosition;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -65,7 +72,9 @@ import javax.mail.Session;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener
+, GoogleApiClient.ConnectionCallbacks, LocationListener {
+
 
 
     private TextView timerTV;
@@ -93,6 +102,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView Name, Email;
     private ImageView profilepic;
 
+    private GoogleApiClient locationClient;
+
     private LinearLayout send;
 
 
@@ -116,7 +127,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions).build();
-
+        if(locationClient == null) {
+            locationClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
 
         db = FirebaseDatabase.getInstance();
         dbRef = db.getReference("FIREBASE");
@@ -124,6 +141,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         //showPopup();
     }
+
+
+    @Override
+    protected void onStart(){
+        locationClient.connect();
+        super.onStart();
+    }
+
+   @Override
+   public void onConnected(@Nullable Bundle bundle){
+       Log.v("MY_TAG", "GPS Connected.");
+       try {
+           Location loc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
+           Log.v("MY_TAG", "" + loc.getLatitude() + ", " + loc.getLongitude());
+
+           LocationRequest r = new LocationRequest();
+           r.setInterval(1000);
+           r.setFastestInterval(500);
+           r.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+           LocationServices.FusedLocationApi.requestLocationUpdates(locationClient,r,this);
+       }catch (SecurityException ex) {//security exception is not a subclass of Exception
+           ex.printStackTrace();
+       }
+   }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        Log.v("MY_TAG", "On Location Changed Called.");
+        try {
+            Location loc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
+            Log.v("MY_TAG", "" + loc.getLatitude() + ", " + loc.getLongitude());
+
+            Geocoder g = new Geocoder(this);
+            List<Address> la = g.getFromLocation(loc.getLatitude(),loc.getLongitude(),3);
+            for(int i = 0; i< 3 ; i++) {
+                Log.v("MY_TAG", "Address " + i + ": " + la.get(i).toString());
+            }
+        }catch (SecurityException ex) {//security exception is not a subclass of Exception
+            ex.printStackTrace();
+        } catch (Exception ex2){
+
+        }
+    }
+
 
     //This method starts the timer. This will eventually
     //be automated to start and stop based on the Geofence.
@@ -242,12 +309,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else { // Result was a failure
                 Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
             }
-        }
-
-        else{
+        } else {
 
 
-            if(REQ_Code == requestCode){
+            if (REQ_Code == requestCode) {
 
                 GoogleSignInResult resultOfGoogleSignIn = Auth.GoogleSignInApi.getSignInResultFromIntent(x);
                 handleResult(resultOfGoogleSignIn);
@@ -330,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
 
-        switch (v.getId()){
+        switch (v.getId()) {
 
             case R.id.login_button:
                 signIn();
@@ -347,7 +412,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void signIn(){
+    private void signIn() {
 
 
         Intent intent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
@@ -356,21 +421,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void signOut(){
+    private void signOut() {
 
         Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(@NonNull Status status) {
-                 updateUI(false);
+                updateUI(false);
             }
         });
 
 
     }
 
-    private void handleResult(GoogleSignInResult result){
+    private void handleResult(GoogleSignInResult result) {
 
-        if(result.isSuccess() ){
+        if (result.isSuccess()) {
 
             GoogleSignInAccount signInAccount = result.getSignInAccount();
             String name = signInAccount.getDisplayName();
@@ -382,26 +447,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //Glide.with(this).load(img_url).into(profilepic);
 
             updateUI(true);
-        }
-        else{
+        } else {
 
             updateUI(false);
         }
 
 
-
     }
 
-    private void updateUI(boolean isLogin){
+    private void updateUI(boolean isLogin) {
 
-        if(isLogin){
-
+        if (isLogin) {
+            Log.v("mytag", "in updateUI, isLogin");
             linearLayoutProfile.setVisibility(View.VISIBLE);
             linearLayoutSignIn.setVisibility(View.GONE);
             signIn.setVisibility(View.GONE);
-        }
-        else{
+        } else {
 
+            Log.v("mytag", "in updateUI, isnotLogin");
             linearLayoutProfile.setVisibility(View.GONE);
             linearLayoutSignIn.setVisibility(View.VISIBLE);
             signIn.setVisibility(View.VISIBLE);
@@ -417,37 +480,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //
 //    }
 
-    public void sendEmail(View v){
+    public void sendEmail(View v) {
 
 
-        Log.v("MyTAGE","about to go into thread" );
-
+        Log.v("MyTAGE", "about to go into thread");
 
 
         Thread thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
-                try  {
+                try {
 
 
-
-
-                    Log.v("MyTAGE","Email method is called" );
+                    Log.v("MyTAGE", "Email method is called");
                     Mail mail = new Mail();
                     try {
                         mail.send();
 
-                        Log.v("MyTAGE","Email is sent" );
+                        Log.v("MyTAGE", "Email is sent");
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-
-
-
-
 
 
                 } catch (Exception e) {
@@ -459,25 +514,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         thread.start();
 
 
-
-
-
-
-
-
-
-
-
-
-
-
     }
 
-    public void calendarIntent(View v){
+    public void calendarIntent(View v) {
         //Intent x = new Intent(this,ClientsActivity.class);
         //startActivity(x);
     }
-
 
 
 }
