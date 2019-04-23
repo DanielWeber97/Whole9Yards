@@ -76,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Toast toast;
     private final int IMAGE_CODE = 123;
     ImageView image;
-    private File confImgFile;
+    File confImgFile;
 
     //Firebase
     FirebaseDatabase db;
@@ -232,12 +232,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //Now only useful to remind user that they didn't take the picture.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent x) {
+
+        super.onActivityResult(requestCode, resultCode, x);
+
+
         if (requestCode == IMAGE_CODE) {
             if (resultCode == RESULT_OK) {
                 Bitmap takenImage = BitmapFactory.decodeFile(confImgFile.getAbsolutePath());
             } else { // Result was a failure
                 Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
             }
+        }
+
+        else{
+
+
+            if(REQ_Code == requestCode){
+
+                GoogleSignInResult resultOfGoogleSignIn = Auth.GoogleSignInApi.getSignInResultFromIntent(x);
+                handleResult(resultOfGoogleSignIn);
+            }
+
+
         }
     }
 
@@ -394,16 +410,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if(REQ_Code == requestCode){
-
-            GoogleSignInResult resultOfGoogleSignIn = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
-            handleResult(resultOfGoogleSignIn);
-        }
-    }
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//
+//
+//
+//    }
 
     public void sendEmail(View v){
 
