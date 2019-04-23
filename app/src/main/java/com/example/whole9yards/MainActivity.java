@@ -4,36 +4,35 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.net.Uri;
-import android.os.CountDownTimer;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.SyncStateContract;
+import android.support.annotation.NonNull;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.view.View;
-import android.view.Window;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.core.Constants;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.FieldPosition;
-import java.text.ParsePosition;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
@@ -49,6 +48,13 @@ public class MainActivity extends AppCompatActivity {
     private final int IMAGE_CODE = 123;
     ImageView image;
     private File confImgFile;
+    private ArrayList<Geofence> geofenceList;
+    protected GoogleApiClient googleApiClient;
+
+
+    //Geofencing
+    private GeofencingClient geofencingClient;
+
 
     //Firebase
     FirebaseDatabase db;
@@ -61,9 +67,12 @@ public class MainActivity extends AppCompatActivity {
 
         db = FirebaseDatabase.getInstance();
         dbRef = db.getReference("FIREBASE");
+
+
         confImgFile = null;
 
     }
+
 
     //This method starts the timer. This will eventually
     //be automated to start and stop based on the Geofence.
@@ -230,4 +239,5 @@ public class MainActivity extends AppCompatActivity {
         toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
         toast.show();
     }
+
 }

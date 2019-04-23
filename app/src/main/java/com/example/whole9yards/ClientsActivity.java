@@ -182,7 +182,6 @@ public class ClientsActivity extends AppCompatActivity {
                         if(selectedId == null){
                             selectedId= ids.get(c.clientName);
                         }
-                        Log.v("mytag", "In onLongClick. selectedId: " + selectedId);
                         cv.setCardBackgroundColor(Color.RED);
                         remove.setVisibility(View.VISIBLE);
                         selected = true;
@@ -197,7 +196,6 @@ public class ClientsActivity extends AppCompatActivity {
     public void deleteClient(View v) {
         if (selected) {
             list.removeViewAt(selectedIndex);
-            Log.v("mytag", "selectedId: " + selectedId);
             dbClients.child(selectedId).removeValue();
             selected = false;
             remove.setVisibility(View.GONE);
