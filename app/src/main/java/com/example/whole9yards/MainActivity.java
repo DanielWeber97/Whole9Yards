@@ -4,40 +4,69 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.CountDownTimer;
+import android.os.Environment;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.provider.SyncStateContract;
-import android.support.annotation.NonNull;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.View;
+import android.view.Window;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.bumptech.glide.Glide;
+import com.google.android.gms.auth.api.Auth;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.auth.api.signin.GoogleSignInResult;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Status;
-import com.google.android.gms.location.Geofence;
-import com.google.android.gms.location.GeofencingClient;
-import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.signin.SignInOptions;
+import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.core.Constants;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.FieldPosition;
+import java.text.ParsePosition;
+import java.util.Date;
+import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends AppCompatActivity {
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Session;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener {
+
 
     private TextView timerTV;
     private TextView startStopTV;
@@ -48,42 +77,69 @@ public class MainActivity extends AppCompatActivity {
     private final int IMAGE_CODE = 123;
     ImageView image;
     private File confImgFile;
-    private ArrayList<Geofence> geofenceList;
-    protected GoogleApiClient googleApiClient;
-
-
-    //Geofencing
-    private GeofencingClient geofencingClient;
-
 
     //Firebase
     FirebaseDatabase db;
     DatabaseReference dbRef;
+
+    private SignInButton signIn;
+    private GoogleApiClient googleApiClient;
+    private static final int REQ_Code = 9000;
+
+
+    private LinearLayout linearLayoutProfile;
+    private LinearLayout linearLayoutSignIn;
+    private Button signOut;
+    private TextView Name, Email;
+    private ImageView profilepic;
+
+    private LinearLayout send;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        linearLayoutProfile = (LinearLayout) findViewById(R.id.profileSectionLL); //1922
+        linearLayoutSignIn = (LinearLayout) findViewById(R.id.SignInButtonLL);
+        signOut = (Button) findViewById(R.id.SignOutButton);
+        Name = (TextView) findViewById(R.id.nameID);
+        Email = (TextView) findViewById(R.id.emailID);
+        profilepic = (ImageView) findViewById(R.id.profilePicID);
+        signOut.setOnClickListener(this);
+        linearLayoutProfile.setVisibility(View.GONE);
+
+
+        signIn = (SignInButton) findViewById(R.id.login_button);
+        signIn.setOnClickListener(this);
+
+        GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
+        googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions).build();
+
+
         db = FirebaseDatabase.getInstance();
         dbRef = db.getReference("FIREBASE");
-
-
         confImgFile = null;
 
+        //showPopup();
     }
-
 
     //This method starts the timer. This will eventually
     //be automated to start and stop based on the Geofence.
     public void startOnClick(View v) {
 
+
         Timer timer = new Timer();
+
         if (isClicked == 0) {
+
             startStopTV = findViewById(R.id.startStopTV);
             startStopTV.setText("Stop Job");
 
+
             startTime = System.currentTimeMillis();
+
 
             timer.scheduleAtFixedRate(new TimerTask() {
 
@@ -140,6 +196,8 @@ public class MainActivity extends AppCompatActivity {
 
 
         }
+
+
     }
 
     //This method takes the user to the Google Calendar API
@@ -239,5 +297,175 @@ public class MainActivity extends AppCompatActivity {
         toast = Toast.makeText(this, message, Toast.LENGTH_SHORT);
         toast.show();
     }
+
+    public void taskCompleted() {
+        //send email to boss and client
+
+    }
+
+
+    public void pushTestData(View v) {
+        EditText t = findViewById(R.id.text);
+        String s = t.getText().toString();
+
+        dbRef.push().setValue(s);
+    }
+
+    @Override
+    public void onClick(View v) {
+
+        switch (v.getId()){
+
+            case R.id.login_button:
+                signIn();
+                break;
+            case R.id.SignOutButton:
+                signOut();
+                break;
+        }
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
+    }
+
+    private void signIn(){
+
+
+        Intent intent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
+        startActivityForResult(intent, REQ_Code);
+
+
+    }
+
+    private void signOut(){
+
+        Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(new ResultCallback<Status>() {
+            @Override
+            public void onResult(@NonNull Status status) {
+                 updateUI(false);
+            }
+        });
+
+
+    }
+
+    private void handleResult(GoogleSignInResult result){
+
+        if(result.isSuccess() ){
+
+            GoogleSignInAccount signInAccount = result.getSignInAccount();
+            String name = signInAccount.getDisplayName();
+            String email = signInAccount.getEmail();
+            //String img_url = signInAccount.getPhotoUrl().toString();
+
+            Name.setText(name);
+            Email.setText(email);
+            //Glide.with(this).load(img_url).into(profilepic);
+
+            updateUI(true);
+        }
+        else{
+
+            updateUI(false);
+        }
+
+
+
+    }
+
+    private void updateUI(boolean isLogin){
+
+        if(isLogin){
+
+            linearLayoutProfile.setVisibility(View.VISIBLE);
+            linearLayoutSignIn.setVisibility(View.GONE);
+            signIn.setVisibility(View.GONE);
+        }
+        else{
+
+            linearLayoutProfile.setVisibility(View.GONE);
+            linearLayoutSignIn.setVisibility(View.VISIBLE);
+            signIn.setVisibility(View.VISIBLE);
+        }
+
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(REQ_Code == requestCode){
+
+            GoogleSignInResult resultOfGoogleSignIn = Auth.GoogleSignInApi.getSignInResultFromIntent(data);
+            handleResult(resultOfGoogleSignIn);
+        }
+    }
+
+    public void sendEmail(View v){
+
+
+        Log.v("MyTAGE","about to go into thread" );
+
+
+
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try  {
+
+
+
+
+                    Log.v("MyTAGE","Email method is called" );
+                    Mail mail = new Mail();
+                    try {
+                        mail.send();
+
+                        Log.v("MyTAGE","Email is sent" );
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
+
+
+
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    public void calendarIntent(View v){
+        //Intent x = new Intent(this,ClientsActivity.class);
+        //startActivity(x);
+    }
+
+
 
 }
