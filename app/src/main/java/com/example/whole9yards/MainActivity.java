@@ -4,35 +4,28 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
-import android.os.CountDownTimer;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
-import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -45,37 +38,22 @@ import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.signin.SignInOptions;
-import com.google.api.client.repackaged.org.apache.commons.codec.binary.Base64;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.FieldPosition;
-import java.text.ParsePosition;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Session;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, GoogleApiClient.OnConnectionFailedListener
-, GoogleApiClient.ConnectionCallbacks, LocationListener {
-
-
+        , GoogleApiClient.ConnectionCallbacks, LocationListener {
 
     private TextView timerTV;
     private TextView startStopTV;
@@ -90,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //Firebase
     FirebaseDatabase db;
     DatabaseReference dbRef;
+    DatabaseReference dbClients;
 
     private SignInButton signIn;
     private GoogleApiClient googleApiClient;
@@ -103,8 +82,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ImageView profilepic;
 
     private GoogleApiClient locationClient;
+    private Geocoder g;
 
     private LinearLayout send;
+
+    public ArrayList<String> addresses;
+    private ArrayList<Fence> fences;
+    private boolean inFenceNow;
+    private Timer timer;
 
 
     @Override
@@ -127,7 +112,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions).build();
-        if(locationClient == null) {
+        if (locationClient == null) {
             locationClient = new GoogleApiClient.Builder(this)
                     .addConnectionCallbacks(this)
                     .addOnConnectionFailedListener(this)
@@ -139,33 +124,103 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dbRef = db.getReference("FIREBASE");
         confImgFile = null;
 
+        g = new Geocoder(this);
+        addresses = new ArrayList<String>();
+        fences = new ArrayList<Fence>();
+        inFenceNow = false;
+
         //showPopup();
     }
 
 
     @Override
-    protected void onStart(){
+    protected void onStart() {
         locationClient.connect();
         super.onStart();
+
+        dbClients = FirebaseDatabase.getInstance().getReference("dbClients");
+        dbClients.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    String addressArg = snapshot.child("clientAddress").getValue().toString();
+                    addresses.add(addressArg);
+
+                }
+                for (String s : addresses) {
+                    Fence f = createFence(s);
+                    if (f != null) {
+                        fences.add(f);
+                    }
+                }
+                dbClients.removeEventListener(this);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
     }
 
-   @Override
-   public void onConnected(@Nullable Bundle bundle){
-       Log.v("MY_TAG", "GPS Connected.");
-       try {
-           Location loc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
-           Log.v("MY_TAG", "" + loc.getLatitude() + ", " + loc.getLongitude());
+    private Fence createFence(String s) {
+        Fence f = null;
+        try {
+            List<Address> a = g.getFromLocationName(s, 1);
+            if (a.size() > 0) {
+                Address fenceAddress = a.get(0);
+                f = new Fence(fenceAddress.getLongitude() + .03, fenceAddress.getLongitude() - .03,
+                        fenceAddress.getLatitude() - .03, fenceAddress.getLatitude() + .03);
+                //Log.v("mytag", "in createFence " + fenceAddress.getLatitude() + " " + fenceAddress.getLongitude());
 
-           LocationRequest r = new LocationRequest();
-           r.setInterval(1000);
-           r.setFastestInterval(500);
-           r.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                Log.v("mytag", "in createFence " + f.toString());
+                return f;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
-           LocationServices.FusedLocationApi.requestLocationUpdates(locationClient,r,this);
-       }catch (SecurityException ex) {//security exception is not a subclass of Exception
-           ex.printStackTrace();
-       }
-   }
+        if (f != null) {
+            Log.v("mytag", "in createFence " + f.toString());
+        }
+        return f;
+    }
+
+    public boolean inAFence(double lat, double lon) {
+        for (Fence f : fences) {
+            Log.v("mytag", f.toString());
+            if (lat >= f.getLeft() && lat <= f.getRight()
+                    && lon >= f.getBottom() && lon <= f.getTop()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    protected void onStop() {
+        locationClient.disconnect();
+        super.onStop();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.v("mytag", "GPS Connected.");
+        try {
+            Location loc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
+            Log.v("mytag", "" + loc.getLatitude() + ", " + loc.getLongitude());
+
+            LocationRequest r = new LocationRequest();
+            r.setInterval(1000);
+            r.setFastestInterval(500);
+            r.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+            LocationServices.FusedLocationApi.requestLocationUpdates(locationClient, r, this);
+        } catch (SecurityException ex) {//security exception is not a subclass of Exception
+            ex.printStackTrace();
+        }
+    }
 
     @Override
     public void onConnectionSuspended(int i) {
@@ -174,30 +229,56 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.v("MY_TAG", "On Location Changed Called.");
+        Log.v("mytag", "On Location Changed Called.");
         try {
-            Location loc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
-            Log.v("MY_TAG", "" + loc.getLatitude() + ", " + loc.getLongitude());
 
-            Geocoder g = new Geocoder(this);
-            List<Address> la = g.getFromLocation(loc.getLatitude(),loc.getLongitude(),3);
-            for(int i = 0; i< 3 ; i++) {
-                Log.v("MY_TAG", "Address " + i + ": " + la.get(i).toString());
+            Location currentLoc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
+            Log.v("mytag", "in onLocationChanged" + currentLoc.getLatitude() + ", " + currentLoc.getLongitude());
+            // List<Address> davisLocation = g.getFromLocationName("Davis Library",1);
+            // if(currentLoc.getLatitude()< davisLocation.get(0).getLatitude()+.01
+            // && currentLoc.getLatitude()> davisLocation.get(0).getLatitude()-.01
+            // && currentLoc.getLongitude()< davisLocation.get(0).getLongitude()+.01
+            // && currentLoc.getLongitude()> davisLocation.get(0).getLongitude()-.01){
+            //     showToast("YOU'RE IN DAVIS");
+            // }
+
+            Log.v("mytag", inAFence(currentLoc.getLatitude(), currentLoc.getLongitude()) + "");
+            if (inAFence(currentLoc.getLatitude(), currentLoc.getLongitude())) {
+
+                if (inFenceNow) {
+
+                } else {
+                    startTimer();
+                    inFenceNow = true;
+                }
+            } else {
+                if (inFenceNow) {
+                    timer.cancel();
+                }
+                inFenceNow = false;
             }
-        }catch (SecurityException ex) {//security exception is not a subclass of Exception
-            ex.printStackTrace();
-        } catch (Exception ex2){
 
+        } catch (SecurityException ex) {//security exception is not a subclass of Exception
+            ex.printStackTrace();
+        } catch (Exception ex2) {
+            ex2.printStackTrace();
         }
     }
 
+    public void stopTimer(View v) {
+        timer.cancel();
+        timerTV.setText("00:00");
+        startStopTV.setText("Start Job");
+        minute = 0;
+
+    }
 
     //This method starts the timer. This will eventually
     //be automated to start and stop based on the Geofence.
-    public void startOnClick(View v) {
+    public void startTimer() {
 
 
-        Timer timer = new Timer();
+        timer = new Timer();
 
         if (isClicked == 0) {
 
@@ -384,14 +465,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-
-    public void pushTestData(View v) {
-        EditText t = findViewById(R.id.text);
-        String s = t.getText().toString();
-
-        dbRef.push().setValue(s);
-    }
-
     @Override
     public void onClick(View v) {
 
@@ -429,8 +502,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 updateUI(false);
             }
         });
-
-
     }
 
     private void handleResult(GoogleSignInResult result) {

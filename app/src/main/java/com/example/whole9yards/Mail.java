@@ -135,7 +135,6 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
 
             // if you want to attach a file to the message
             // method is defined below
-            MainActivity m = new MainActivity();
 
             //addAttachment(m.confImgFile.toString());
 

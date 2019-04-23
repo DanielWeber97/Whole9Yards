@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Matrix;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -70,12 +71,12 @@ public class ClientsActivity extends AppCompatActivity {
         selectedIndex = -1;
         ids = new HashMap<String, String>();
         selectedId = "";
+
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
         dbClients.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
