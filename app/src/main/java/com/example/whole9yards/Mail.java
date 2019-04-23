@@ -135,7 +135,9 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
 
             // if you want to attach a file to the message
             // method is defined below
-            addAttachment("filename");
+            MainActivity m = new MainActivity();
+
+            //addAttachment(m.confImgFile.toString());
 
             // adding the message body part to the mimemessage
             msg.setContent(_multipart);
@@ -205,6 +207,11 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
     public void setBody(String _body) {
 
         this._body = _body;
+    }
+
+    public void testMergeMethod(){
+
+
     }
 
 }
