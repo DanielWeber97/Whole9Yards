@@ -110,85 +110,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         ////////////
 
 
-        Mail mail = new Mail();
-        try {
-            mail.send();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-
-        /////////////////////////////////////////////////////////////
-
-
-//        send = (LinearLayout) findViewById(R.id.send);
-//
-//        send.setOnClickListener(new View.OnClickListener() {
-//
-//
-//
-//            public void onClick(View v) {
-//
-//                new Thread(new Runnable() {
-//
-//                    public void run() {
-//
-//                        try {
-//
-//                            GMailSender sender = new GMailSender(
-//
-//                                    "whole9yardsapp@gmail.com",
-//
-//                                    "Iphone$1234");
-//
-//
-//
-//                            //sender.addAttachment(Environment.getExternalStorageDirectory().getPath()+"/image.jpg");
-//
-//                            sender.sendMail("Test mail", "This mail has been sent from android app along with attachment",
-//
-//                                    "whole9yardsapp@gmail.com",
-//
-//                                    "zglontz@gmail.com");
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//                        } catch (Exception e) {
-//
-//                            Toast.makeText(getApplicationContext(),"Error",Toast.LENGTH_LONG).show();
-//
-//
-//
-//                        }
-//
-//                    }
-//
-//                }).start();
-//
-//            }
-//
-//        });
-
-
-
-
-
-
-
-
-
-
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////
-
-        //showPopup();
     }
 
 
@@ -429,7 +350,62 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void sendEmail(View v){
 
 
+        Log.v("MyTAGE","about to go into thread" );
 
+
+
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try  {
+
+
+
+
+                    Log.v("MyTAGE","Email method is called" );
+                    Mail mail = new Mail();
+                    try {
+                        mail.send();
+
+                        Log.v("MyTAGE","Email is sent" );
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+
+
+
+
+
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    public void calendarIntent(View v){
+        //Intent x = new Intent(this,ClientsActivity.class);
+        //startActivity(x);
     }
 
 

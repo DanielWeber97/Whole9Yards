@@ -110,7 +110,7 @@
                 android:layout_height="match_parent"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:onClick="sendEmail"
+
                 android:id="@+id/send">
 
                 <ImageView
@@ -125,6 +125,7 @@
                     android:layout_height="match_parent"
                     android:gravity="center_horizontal"
                     android:text="Map"
+                    android:onClick="sendEmail"
                     android:textSize="30dp" />
 
             </LinearLayout>
