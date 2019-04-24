@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         , GoogleApiClient.ConnectionCallbacks, LocationListener {
 
     private TextView timerTV;
-    private TextView startStopTV;
+    //private TextView startStopTV;
     private long startTime;
     private int minute = 0;
     private int isClicked = 0;
@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<Fence> fences;
     private boolean wasInFence;
     private Timer timer;
-    private boolean prevPrev;
+    private boolean timerRunning;
 
 
     @Override
@@ -99,18 +99,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        linearLayoutProfile = (LinearLayout) findViewById(R.id.profileSectionLL); //1922
-        linearLayoutSignIn = (LinearLayout) findViewById(R.id.SignInButtonLL);
-        signOut = (Button) findViewById(R.id.SignOutButton);
-        Name = (TextView) findViewById(R.id.nameID);
-        Email = (TextView) findViewById(R.id.emailID);
-        profilepic = (ImageView) findViewById(R.id.profilePicID);
-        signOut.setOnClickListener(this);
-        linearLayoutProfile.setVisibility(View.GONE);
+      //  linearLayoutProfile = (LinearLayout) findViewById(R.id.profileSectionLL); //1922
+      //  linearLayoutSignIn = (LinearLayout) findViewById(R.id.SignInButtonLL);
+      //  signOut = (Button) findViewById(R.id.SignOutButton);
+      //  Name = (TextView) findViewById(R.id.nameID);
+      //  Email = (TextView) findViewById(R.id.emailID);
+      //  profilepic = (ImageView) findViewById(R.id.profilePicID);
+      //  signOut.setOnClickListener(this);
+      //  linearLayoutProfile.setVisibility(View.GONE);
 
 
-        signIn = (SignInButton) findViewById(R.id.login_button);
-        signIn.setOnClickListener(this);
+      //  signIn = (SignInButton) findViewById(R.id.login_button);
+      //  signIn.setOnClickListener(this);
 
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions).build();
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SharedPreferences pref = getSharedPreferences("Fence", Context.MODE_PRIVATE);
         Log.v("mytag", "sharedPref boolean value " + pref.getBoolean("wasInFence", false));
         wasInFence = pref.getBoolean("wasInFence", false);
-        //showPopup();
+       //showPopup();
     }
 
 
@@ -231,12 +231,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onLocationChanged(Location location) {
+         if(timerTV!= null && timerTV.getText().toString().equals("00:00")){
+            timerRunning = false;
+        } else {
+            timerRunning = true;
+        }
+
         try {
             Location currentLoc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
             Log.v("mytag", "in onLocationChanged" + currentLoc.getLatitude() + ", " + currentLoc.getLongitude());
 
 
             boolean currentlyInFence = inAFence(currentLoc.getLatitude(), currentLoc.getLongitude());
+            if(currentlyInFence){
+                //showToast("In a fence");
+            }
             Log.v("mytag", "\nwasInFence: " + wasInFence + "\n currentlyInFence: " + currentlyInFence);
             checkTransitions(currentlyInFence);
 
@@ -252,17 +261,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SharedPreferences sharedPref = getSharedPreferences("Fence",
                 Context.MODE_PRIVATE);
 
-        //Currently in a fence
+
+
         if ((wasInFence) && currentlyInFence) {
             //was already in the fence
             wasInFence = true;
+            timerRunning = true;
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putBoolean("wasInFence", true);
             editor.apply();
 
-        } else if (!wasInFence && currentlyInFence) {
+        } else if ((!wasInFence|| !timerRunning) && currentlyInFence) {
             //just entered the fence
             startTimer();
+            timerRunning = true;
             wasInFence = true;
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putBoolean("wasInFence", true);
@@ -271,13 +283,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             wasInFence = false;
             View v = new View(this);
             stopTimer(v);
+            //SEND EMAIL HERE
+            showPopup();
+
+
+            timerRunning = false;
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putBoolean("wasInFence", false);
             editor.apply();
+            showToast("Leaving fence");
         } else if (!wasInFence && !currentlyInFence) {
             wasInFence = false;
             View v = new View(this);
             stopTimer(v);
+            timerRunning = false;
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putBoolean("wasInFence", false);
             editor.apply();
@@ -287,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void stopTimer(View v) {
         timer.cancel();
         timerTV.setText("00:00");
-        startStopTV.setText("Start Job");
+        //startStopTV.setText("Start Job");
         minute = 0;
 
     }
@@ -301,8 +320,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         if (isClicked == 0) {
 
-            startStopTV = findViewById(R.id.startStopTV);
-            startStopTV.setText("Stop Job");
+            //startStopTV = findViewById(R.id.startStopTV);
+            //startStopTV.setText("Stop Job");
 
 
             startTime = System.currentTimeMillis();
@@ -359,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             //reset step
             timerTV.setText("00:00");
-            startStopTV.setText("Start Job");
+            //startStopTV.setText("Start Job");
 
 
         }
@@ -489,12 +508,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (v.getId()) {
 
-            case R.id.login_button:
-                signIn();
-                break;
-            case R.id.SignOutButton:
-                signOut();
-                break;
+        //    case R.id.login_button:
+        //        signIn();
+        //        break;
+        //    case R.id.SignOutButton:
+        //        signOut();
+        //        break;
         }
 
     }

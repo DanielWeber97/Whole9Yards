@@ -72,6 +72,7 @@ public class ClientsActivity extends AppCompatActivity {
         ids = new HashMap<String, String>();
         selectedId = "";
 
+
     }
 
     @Override
