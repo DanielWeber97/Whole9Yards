@@ -92,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private boolean wasInFence;
     private Timer timer;
     private boolean timerRunning;
-
+    private String jobTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -290,8 +290,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         } else if (wasInFence && !currentlyInFence) {
             Log.v("mytag", "In third block");
             wasInFence = false;
+            jobTime = "Your lawn has been serviced! Here's how long it took: "+timerTV.getText().toString();
             View v = new View(this);
             stopTimer(v);
+            Log.v("mytag",jobTime);
             //SEND EMAIL HERE
             //  showPopup();
 
