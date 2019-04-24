@@ -99,18 +99,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-      //  linearLayoutProfile = (LinearLayout) findViewById(R.id.profileSectionLL); //1922
-      //  linearLayoutSignIn = (LinearLayout) findViewById(R.id.SignInButtonLL);
-      //  signOut = (Button) findViewById(R.id.SignOutButton);
-      //  Name = (TextView) findViewById(R.id.nameID);
-      //  Email = (TextView) findViewById(R.id.emailID);
-      //  profilepic = (ImageView) findViewById(R.id.profilePicID);
-      //  signOut.setOnClickListener(this);
-      //  linearLayoutProfile.setVisibility(View.GONE);
+        //  linearLayoutProfile = (LinearLayout) findViewById(R.id.profileSectionLL); //1922
+        //  linearLayoutSignIn = (LinearLayout) findViewById(R.id.SignInButtonLL);
+        //  signOut = (Button) findViewById(R.id.SignOutButton);
+        //  Name = (TextView) findViewById(R.id.nameID);
+        //  Email = (TextView) findViewById(R.id.emailID);
+        //  profilepic = (ImageView) findViewById(R.id.profilePicID);
+        //  signOut.setOnClickListener(this);
+        //  linearLayoutProfile.setVisibility(View.GONE);
 
 
-      //  signIn = (SignInButton) findViewById(R.id.login_button);
-      //  signIn.setOnClickListener(this);
+        //  signIn = (SignInButton) findViewById(R.id.login_button);
+        //  signIn.setOnClickListener(this);
 
         GoogleSignInOptions signInOptions = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestEmail().build();
         googleApiClient = new GoogleApiClient.Builder(this).enableAutoManage(this, this).addApi(Auth.GOOGLE_SIGN_IN_API, signInOptions).build();
@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         SharedPreferences pref = getSharedPreferences("Fence", Context.MODE_PRIVATE);
         Log.v("mytag", "sharedPref boolean value " + pref.getBoolean("wasInFence", false));
         wasInFence = pref.getBoolean("wasInFence", false);
-       //showPopup();
+        //showPopup();
     }
 
 
@@ -174,8 +174,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             List<Address> a = g.getFromLocationName(s, 1);
             if (a.size() > 0) {
                 Address fenceAddress = a.get(0);
-                f = new Fence(fenceAddress.getLongitude() + .01, fenceAddress.getLongitude() - .01,
-                        fenceAddress.getLatitude() - .01, fenceAddress.getLatitude() + .01);
+                f = new Fence(fenceAddress.getLongitude() + .00095, fenceAddress.getLongitude() - .00095,
+                        fenceAddress.getLatitude() - .00095, fenceAddress.getLatitude() + .00095);
                 return f;
             }
         } catch (IOException e) {
@@ -231,30 +231,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onLocationChanged(Location location) {
-         if(timerTV!= null && timerTV.getText().toString().equals("00:00")){
-            timerRunning = false;
-        } else {
-            timerRunning = true;
+        if (timerTV != null) {
+            if (timerTV.getText().toString().equals("00:00")) {
+                timerRunning = false;
+            } else {
+                timerRunning = true;
+            }
         }
-
         try {
             Location currentLoc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
             Log.v("mytag", "in onLocationChanged" + currentLoc.getLatitude() + ", " + currentLoc.getLongitude());
 
 
             boolean currentlyInFence = inAFence(currentLoc.getLatitude(), currentLoc.getLongitude());
-            if(currentlyInFence){
-                //showToast("In a fence");
+            if (currentlyInFence) {
+                showToast("In a fence");
+            } else {
+                showToast("not in a fence");
             }
-            Log.v("mytag", "\nwasInFence: " + wasInFence + "\n currentlyInFence: " + currentlyInFence);
+            Log.v("mytag", "\n\nwasInFence: " + wasInFence + "\n currentlyInFence: " + currentlyInFence
+                    + " timerRunning: " + timerRunning);
             checkTransitions(currentlyInFence);
 
 
-        } catch (SecurityException ex) {//security exception is not a subclass of Exception
+        } catch (
+                SecurityException ex) {//security exception is not a subclass of Exception
             ex.printStackTrace();
-        } catch (Exception ex2) {
+        } catch (
+                Exception ex2) {
             ex2.printStackTrace();
         }
+
     }
 
     public void checkTransitions(boolean currentlyInFence) {
@@ -262,8 +269,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Context.MODE_PRIVATE);
 
 
-
         if ((wasInFence) && currentlyInFence) {
+            Log.v("mytag", "In first block");
             //was already in the fence
             wasInFence = true;
             timerRunning = true;
@@ -271,8 +278,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             editor.putBoolean("wasInFence", true);
             editor.apply();
 
-        } else if ((!wasInFence|| !timerRunning) && currentlyInFence) {
+        } else if ((!wasInFence || !timerRunning) && currentlyInFence) {
             //just entered the fence
+            Log.v("mytag", "In second block");
             startTimer();
             timerRunning = true;
             wasInFence = true;
@@ -280,11 +288,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             editor.putBoolean("wasInFence", true);
             editor.apply();
         } else if (wasInFence && !currentlyInFence) {
+            Log.v("mytag", "In third block");
             wasInFence = false;
             View v = new View(this);
             stopTimer(v);
             //SEND EMAIL HERE
-            showPopup();
+            //  showPopup();
 
 
             timerRunning = false;
@@ -293,6 +302,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             editor.apply();
             showToast("Leaving fence");
         } else if (!wasInFence && !currentlyInFence) {
+            Log.v("mytag", "In fourth block");
             wasInFence = false;
             View v = new View(this);
             stopTimer(v);
@@ -318,14 +328,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         timer = new Timer();
 
-        if (isClicked == 0) {
-
-            //startStopTV = findViewById(R.id.startStopTV);
-            //startStopTV.setText("Stop Job");
-
-
             startTime = System.currentTimeMillis();
-
 
             timer.scheduleAtFixedRate(new TimerTask() {
 
@@ -333,11 +336,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 @Override
                 public void run() {
 
-                    //long minutesStart = TimeUnit.MILLISECONDS.toMinutes(startTime);
-                    //long secondsStart = TimeUnit.MILLISECONDS.toSeconds(startTime);
                     long secondsCalc = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime);
 
-                    //Log.v("MYTAG", secondsCalc + "");
 
                     timerTV = findViewById(R.id.timer);
                     if (secondsCalc % 60 == 0) {
@@ -362,26 +362,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }, 1000, 1000);    /// set to run every second
 
-
-            isClicked = 1;
-
-        } else if (isClicked == 1) {
-
-            //cancel timer
-            timer.cancel();
-
-            //reset instance variable
-            minute = 0;
-
-            //rest boolean variable
-            isClicked = 0;
-
-            //reset step
-            timerTV.setText("00:00");
-            //startStopTV.setText("Start Job");
-
-
-        }
 
 
     }
@@ -508,12 +488,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         switch (v.getId()) {
 
-        //    case R.id.login_button:
-        //        signIn();
-        //        break;
-        //    case R.id.SignOutButton:
-        //        signOut();
-        //        break;
+            //    case R.id.login_button:
+            //        signIn();
+            //        break;
+            //    case R.id.SignOutButton:
+            //        signOut();
+            //        break;
         }
 
     }
