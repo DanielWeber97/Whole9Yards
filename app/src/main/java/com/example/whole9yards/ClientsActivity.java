@@ -157,11 +157,19 @@ public class ClientsActivity extends AppCompatActivity {
         cv.setLayoutParams(lp);
         cv.setRadius(15);
 
+        cv.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+
+                highlightRed(cv, new TextView(getApplicationContext()), c);
+                return true;
+            }
+        });
         LinearLayout l = new LinearLayout(getApplicationContext());
         l.setLayoutParams(lp);
         l.setOrientation(LinearLayout.VERTICAL);
 
-        final ViewGroup.LayoutParams paramOfTextViews = new ViewGroup.LayoutParams(450,60);
+        final ViewGroup.LayoutParams paramOfTextViews = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,100);
 
        final TextView t1 = new TextView(getApplicationContext());
 
