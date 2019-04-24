@@ -1,7 +1,9 @@
 package com.example.whole9yards;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
@@ -19,7 +21,6 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -88,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public ArrayList<String> addresses;
     private ArrayList<Fence> fences;
-    private boolean inFenceNow;
+    private boolean wasInFence;
     private Timer timer;
 
 
@@ -127,8 +128,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         g = new Geocoder(this);
         addresses = new ArrayList<String>();
         fences = new ArrayList<Fence>();
-        inFenceNow = false;
 
+        SharedPreferences pref = getSharedPreferences("Fence", Context.MODE_PRIVATE);
+        Log.v("mytag", "sharedPref boolean value " + pref.getBoolean("wasInFence", false));
+        wasInFence = pref.getBoolean("wasInFence", false);
         //showPopup();
     }
 
@@ -170,11 +173,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             List<Address> a = g.getFromLocationName(s, 1);
             if (a.size() > 0) {
                 Address fenceAddress = a.get(0);
-                f = new Fence(fenceAddress.getLongitude() + .03, fenceAddress.getLongitude() - .03,
-                        fenceAddress.getLatitude() - .03, fenceAddress.getLatitude() + .03);
-                //Log.v("mytag", "in createFence " + fenceAddress.getLatitude() + " " + fenceAddress.getLongitude());
-
-                Log.v("mytag", "in createFence " + f.toString());
+                f = new Fence(fenceAddress.getLongitude() + .01, fenceAddress.getLongitude() - .01,
+                        fenceAddress.getLatitude() - .01, fenceAddress.getLatitude() + .01);
                 return f;
             }
         } catch (IOException e) {
@@ -189,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public boolean inAFence(double lat, double lon) {
         for (Fence f : fences) {
-            Log.v("mytag", f.toString());
+            //Log.v("mytag", f.toString());
             if (lat >= f.getLeft() && lat <= f.getRight()
                     && lon >= f.getBottom() && lon <= f.getTop()) {
                 return true;
@@ -209,8 +209,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Log.v("mytag", "GPS Connected.");
         try {
             Location loc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
-            Log.v("mytag", "" + loc.getLatitude() + ", " + loc.getLongitude());
-
+            if (loc != null) {
+                Log.v("mytag", "" + loc.getLatitude() + ", " + loc.getLongitude());
+            }
             LocationRequest r = new LocationRequest();
             r.setInterval(1000);
             r.setFastestInterval(500);
@@ -229,33 +230,41 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onLocationChanged(Location location) {
-        Log.v("mytag", "On Location Changed Called.");
         try {
-
             Location currentLoc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
             Log.v("mytag", "in onLocationChanged" + currentLoc.getLatitude() + ", " + currentLoc.getLongitude());
-            // List<Address> davisLocation = g.getFromLocationName("Davis Library",1);
-            // if(currentLoc.getLatitude()< davisLocation.get(0).getLatitude()+.01
-            // && currentLoc.getLatitude()> davisLocation.get(0).getLatitude()-.01
-            // && currentLoc.getLongitude()< davisLocation.get(0).getLongitude()+.01
-            // && currentLoc.getLongitude()> davisLocation.get(0).getLongitude()-.01){
-            //     showToast("YOU'RE IN DAVIS");
-            // }
+            Log.v("mytag","wasInFence: " + wasInFence);
+            SharedPreferences sharedPref = getSharedPreferences("Fence",
+                    Context.MODE_PRIVATE);
 
-            Log.v("mytag", inAFence(currentLoc.getLatitude(), currentLoc.getLongitude()) + "");
             if (inAFence(currentLoc.getLatitude(), currentLoc.getLongitude())) {
-
-                if (inFenceNow) {
+                //Currently in a fence
+                Log.v("mytag", "currently in a fence");
+                if (wasInFence) {
+                    //was already in the fence
 
                 } else {
+                    //just entered the fence
                     startTimer();
-                    inFenceNow = true;
+                    wasInFence = true;
+
+
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putBoolean("wasInFence", true);
+                    editor.apply();
                 }
             } else {
-                if (inFenceNow) {
-                    timer.cancel();
-                }
-                inFenceNow = false;
+                //Not in a fence
+                Log.v("mytag", "currently not in a fence");
+                wasInFence = false;
+                //if (wasInFence) {
+                    //used to be in a fence, so just exited
+                    View v = new View(this);
+                    stopTimer(v);
+               // }
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putBoolean("wasInFence", false);
+                editor.apply();
             }
 
         } catch (SecurityException ex) {//security exception is not a subclass of Exception
@@ -299,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     //long secondsStart = TimeUnit.MILLISECONDS.toSeconds(startTime);
                     long secondsCalc = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime);
 
-                    Log.v("MYTAG", secondsCalc + "");
+                    //Log.v("MYTAG", secondsCalc + "");
 
                     timerTV = findViewById(R.id.timer);
                     if (secondsCalc % 60 == 0) {
@@ -544,12 +553,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-//
-//
-//
-//    }
 
     public void sendEmail(View v) {
 
