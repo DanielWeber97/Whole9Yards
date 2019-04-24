@@ -92,8 +92,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button signOut;
     private TextView Name, Email;
     private ImageView profilepic;
+    private Timer timer;
 
     private LinearLayout send;
+
+    public String _path;
 
 
     @Override
@@ -130,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void startOnClick(View v) {
 
 
-        Timer timer = new Timer();
+         timer = new Timer();
 
         if (isClicked == 0) {
 
@@ -141,11 +144,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             startTime = System.currentTimeMillis();
 
 
-            timer.scheduleAtFixedRate(new TimerTask() {
 
+
+            timer.scheduleAtFixedRate(new TimerTask() {
 
                 @Override
                 public void run() {
+
+
+                    runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+
 
                     //long minutesStart = TimeUnit.MILLISECONDS.toMinutes(startTime);
                     //long secondsStart = TimeUnit.MILLISECONDS.toSeconds(startTime);
@@ -157,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     if (secondsCalc % 60 == 0) {
                         minute++;
                     }
+
                     if (minute >= 10) {
                         if (secondsCalc % 60 < 10) {
                             timerTV.setText(minute + ":" + "0" + secondsCalc % 60);
@@ -173,29 +185,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
 
                     // Your database code here
+
+                        }
+                    });
                 }
+
             }, 1000, 1000);    /// set to run every second
 
 
             isClicked = 1;
 
+
         } else if (isClicked == 1) {
 
-            //cancel timer
-            timer.cancel();
-
-            //reset instance variable
-            minute = 0;
-
-            //rest boolean variable
-            isClicked = 0;
-
-            //reset step
-            timerTV.setText("00:00");
-            startStopTV.setText("Start Job");
+          stopTimer();
+          isClicked =0;
 
 
         }
+
+
+    }
+
+    public void stopTimer(){
+
+        timer.cancel();
+        timerTV.setText("00:00");
+        startStopTV.setText("Start Job");
+        minute = 0;
 
 
     }
@@ -214,7 +231,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void takePicture(View v) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Create a File reference for the file of the image taken in the Camera application
-        confImgFile = getPhotoUri(System.currentTimeMillis() + ".jpg");
+        //confImgFile = getPhotoUri(System.currentTimeMillis() + ".jpg");
+        confImgFile = getPhotoUri(  "picture.jpg");
+
+        //String path = context.getFilesDir().getAbsolutePath();
+
+
+
+
+
+
 
         // wrap File object into a content provider
         Uri fileProvider = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".provider", confImgFile);
@@ -239,6 +265,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (requestCode == IMAGE_CODE) {
             if (resultCode == RESULT_OK) {
                 Bitmap takenImage = BitmapFactory.decodeFile(confImgFile.getAbsolutePath());
+
+                _path = confImgFile.getAbsolutePath();
+
+                final Mail mail = new Mail(_path, "picture.jpg");
+
+                Log.v("MyTAGE","Made new mail object" );
+
+
+                Thread thread = new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try  {
+
+                try {
+
+                    mail.send();
+
+                    Log.v("MyTAGE","Email is sent" );
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+
+                    Log.v("MyTAGE","Problem sending email" );
+
+
+
+                }
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                thread.start();
+
             } else { // Result was a failure
                 Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
             }
@@ -434,19 +498,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
                     Log.v("MyTAGE","Email method is called" );
-                    Mail mail = new Mail();
+                    //Mail mail = new Mail();
                     try {
-                        mail.send();
+                       // mail.send();
 
                         Log.v("MyTAGE","Email is sent" );
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-
-
-
-
 
 
 
@@ -474,8 +534,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public void calendarIntent(View v){
-        //Intent x = new Intent(this,ClientsActivity.class);
-        //startActivity(x);
+
+        Intent x = new Intent(this,CalendarActivity.class);
+        startActivity(x);
     }
 
 

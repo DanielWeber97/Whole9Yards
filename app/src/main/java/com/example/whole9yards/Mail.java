@@ -3,6 +3,8 @@ package com.example.whole9yards;
 
 //imports for this class to work
 
+import android.util.Log;
+
 import java.util.Date;
 import java.util.Properties;
 
@@ -50,8 +52,15 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
 
     private Multipart _multipart;
 
+    private String _pathName;
+    private String _fileName;
 
-    public Mail() {
+
+    public Mail(String pathname, String filename) {
+
+        _pathName = pathname;
+        _fileName = filename;
+
         _host = "smtp.gmail.com"; // server to gmail to work
         _port = "465"; // gmail port number
         _sport = "465"; // gmail socketfactory port
@@ -85,7 +94,7 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
 
     // method to set the username and password to log into your mailserver
 
-    public Mail(String user, String pass) {
+    public Mail(String user, String pass, Integer _int) {
         _user = user;
         _pass = pass;
     }
@@ -135,9 +144,10 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
 
             // if you want to attach a file to the message
             // method is defined below
-            MainActivity m = new MainActivity();
+          //  MainActivity m = new MainActivity();
 
-            //addAttachment(m.confImgFile.toString());
+
+            addAttachment(_pathName, _fileName);
 
             // adding the message body part to the mimemessage
             msg.setContent(_multipart);
@@ -155,12 +165,13 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
 
     // sending an attachement method
     // like the adding a message part to the body of the mimemessage, it is the same concept for the attachement part
-    public void addAttachment(String filename) throws Exception {
-        BodyPart messageBodyPart = new MimeBodyPart();
-        DataSource source = new FileDataSource(filename);
-        messageBodyPart.setDataHandler(new DataHandler(source));
-        messageBodyPart.setFileName(filename);
+    public void addAttachment(String filepath, String filename) throws Exception {
 
+
+        BodyPart messageBodyPart = new MimeBodyPart();
+        DataSource source = new FileDataSource(_pathName);
+        messageBodyPart.setDataHandler(new DataHandler(source));
+        messageBodyPart.setFileName(_fileName);
         _multipart.addBodyPart(messageBodyPart); // adding the part to the body
     }
 
@@ -209,8 +220,16 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
         this._body = _body;
     }
 
-    public void testMergeMethod(){
+    public void setFileName(String filename){
 
+        _fileName = filename;
+
+
+    }
+
+    public void setPathName(String pathname){
+
+        _pathName = pathname;
 
     }
 
