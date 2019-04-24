@@ -446,7 +446,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (resultCode == RESULT_OK) {
                 Bitmap takenImage = BitmapFactory.decodeFile(confImgFile.getAbsolutePath());
 
-                _path = confImgFile.getAbsolutePath();
+                _path = confImgFile.getAbsolutePath();  
 
                 final Mail mail = new Mail(_path, "picture.jpg");
 
