@@ -244,11 +244,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
             boolean currentlyInFence = inAFence(currentLoc.getLatitude(), currentLoc.getLongitude());
-            if (currentlyInFence) {
-                showToast("In a fence");
-            } else {
-                showToast("not in a fence");
-            }
+            //if (currentlyInFence) {
+            //    showToast("In a fence");
+            //} else {
+            //    showToast("not in a fence");
+            //}
             Log.v("mytag", "\n\nwasInFence: " + wasInFence + "\n currentlyInFence: " + currentlyInFence
                     + " timerRunning: " + timerRunning);
             checkTransitions(currentlyInFence);
@@ -295,14 +295,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             stopTimer(v);
             Log.v("mytag",jobTime);
             //SEND EMAIL HERE
-            //  showPopup();
+              showPopup();
 
 
             timerRunning = false;
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putBoolean("wasInFence", false);
             editor.apply();
-            showToast("Leaving fence");
+            //showToast("Leaving fence");
         } else if (!wasInFence && !currentlyInFence) {
             Log.v("mytag", "In fourth block");
             wasInFence = false;
