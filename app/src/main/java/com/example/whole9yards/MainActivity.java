@@ -397,10 +397,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    //This method takes the user to the Google Calendar API
-    public void calendar(View v) {
-        showToast("Open calendar activity");
-    }
+
 
     //This method takes the user to the Google Maps API
     public void map(View v) {
@@ -446,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             if (resultCode == RESULT_OK) {
                 Bitmap takenImage = BitmapFactory.decodeFile(confImgFile.getAbsolutePath());
 
-                _path = confImgFile.getAbsolutePath();  
+                _path = confImgFile.getAbsolutePath();
 
                 final Mail mail = new Mail(_path, "picture.jpg");
 

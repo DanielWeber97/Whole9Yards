@@ -65,7 +65,7 @@ public class CalendarActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_clients);
+        setContentView(R.layout.activity_events);
 
         dbEvents = FirebaseDatabase.getInstance().getReference("dbCalendar");
         localClients = new ArrayList<Calendar>();
