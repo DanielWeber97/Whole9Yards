@@ -54,6 +54,7 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
 
     private String _pathName;
     private String _fileName;
+    private String time;
 
 
     public Mail(String pathname, String filename) {
@@ -71,7 +72,7 @@ public class Mail extends javax.mail.Authenticator {  //after extending, must ov
 
         _to = new String[] {"zglontz@gmail.com"};  // the address where the email is going to
         _subject = "test email"; // the subject of the email
-        _body = "This is very cool. First email sent through app"; // the body of the email
+        _body = "Hi Valued Customer: Your Animal Doodies technician just serviced your yard. Please let us know if you have any questions! It took Thanks, Zachary Glontz"; // the body of the email
 
         _debuggable = false; // says the mail server is not in debug mode.
         _auth = true; // just a boolean to say that this constructor has run and set all the variables to its correct information
