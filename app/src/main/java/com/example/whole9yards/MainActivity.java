@@ -91,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ArrayList<Fence> fences;
     private boolean wasInFence;
     private Timer timer;
+    private boolean prevPrev;
 
 
     @Override
@@ -233,44 +234,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             Location currentLoc = LocationServices.FusedLocationApi.getLastLocation(locationClient);
             Log.v("mytag", "in onLocationChanged" + currentLoc.getLatitude() + ", " + currentLoc.getLongitude());
-            Log.v("mytag","wasInFence: " + wasInFence);
-            SharedPreferences sharedPref = getSharedPreferences("Fence",
-                    Context.MODE_PRIVATE);
-
-            if (inAFence(currentLoc.getLatitude(), currentLoc.getLongitude())) {
-                //Currently in a fence
-                Log.v("mytag", "currently in a fence");
-                if (wasInFence) {
-                    //was already in the fence
-
-                } else {
-                    //just entered the fence
-                    startTimer();
-                    wasInFence = true;
 
 
-                    SharedPreferences.Editor editor = sharedPref.edit();
-                    editor.putBoolean("wasInFence", true);
-                    editor.apply();
-                }
-            } else {
-                //Not in a fence
-                Log.v("mytag", "currently not in a fence");
-                wasInFence = false;
-                //if (wasInFence) {
-                    //used to be in a fence, so just exited
-                    View v = new View(this);
-                    stopTimer(v);
-               // }
-                SharedPreferences.Editor editor = sharedPref.edit();
-                editor.putBoolean("wasInFence", false);
-                editor.apply();
-            }
+            boolean currentlyInFence = inAFence(currentLoc.getLatitude(), currentLoc.getLongitude());
+            Log.v("mytag", "\nwasInFence: " + wasInFence + "\n currentlyInFence: " + currentlyInFence);
+            checkTransitions(currentlyInFence);
+
 
         } catch (SecurityException ex) {//security exception is not a subclass of Exception
             ex.printStackTrace();
         } catch (Exception ex2) {
             ex2.printStackTrace();
+        }
+    }
+
+    public void checkTransitions(boolean currentlyInFence) {
+        SharedPreferences sharedPref = getSharedPreferences("Fence",
+                Context.MODE_PRIVATE);
+
+        //Currently in a fence
+        if ((wasInFence) && currentlyInFence) {
+            //was already in the fence
+            wasInFence = true;
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putBoolean("wasInFence", true);
+            editor.apply();
+
+        } else if (!wasInFence && currentlyInFence) {
+            //just entered the fence
+            startTimer();
+            wasInFence = true;
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putBoolean("wasInFence", true);
+            editor.apply();
+        } else if (wasInFence && !currentlyInFence) {
+            wasInFence = false;
+            View v = new View(this);
+            stopTimer(v);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putBoolean("wasInFence", false);
+            editor.apply();
+        } else if (!wasInFence && !currentlyInFence) {
+            wasInFence = false;
+            View v = new View(this);
+            stopTimer(v);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putBoolean("wasInFence", false);
+            editor.apply();
         }
     }
 
