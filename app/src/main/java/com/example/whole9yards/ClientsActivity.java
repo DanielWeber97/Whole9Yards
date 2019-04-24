@@ -15,9 +15,11 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
+import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
@@ -71,13 +73,12 @@ public class ClientsActivity extends AppCompatActivity {
         selectedIndex = -1;
         ids = new HashMap<String, String>();
         selectedId = "";
-
-
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+
         dbClients.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -159,12 +160,95 @@ public class ClientsActivity extends AppCompatActivity {
         LinearLayout l = new LinearLayout(getApplicationContext());
         l.setLayoutParams(lp);
         l.setOrientation(LinearLayout.VERTICAL);
+
+        final ViewGroup.LayoutParams paramOfTextViews = new ViewGroup.LayoutParams(450,60);
+
        final TextView t1 = new TextView(getApplicationContext());
-        TextView t2 = new TextView(getApplicationContext());
-        TextView t3 = new TextView(getApplicationContext());
+
+        final TextView t2 = new TextView(getApplicationContext());
+        final TextView t3 = new TextView(getApplicationContext());
+
+        String underlinedStringNumber="<u>"+ c.clientNumber +"</u>";
+        String underlinedStringAddress="<u>"+ c.clientAddress +"</u>";
+
         t1.setText(c.clientName);
-        t2.setText(c.clientNumber);
-        t3.setText(c.clientAddress);
+
+
+        t2.setText(Html.fromHtml(underlinedStringNumber));
+        t3.setText(Html.fromHtml(underlinedStringAddress));
+
+
+
+
+        t2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Log.v("mytag", "this is a test to see if it clicks");
+
+                String telephoneNumber = "tel:" + c.clientNumber.trim() ;
+                Intent phoneAppIntent = new Intent(Intent.ACTION_DIAL);
+                phoneAppIntent.setData(Uri.parse(telephoneNumber));
+                startActivity(phoneAppIntent);
+
+            }
+        });
+
+        t3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                Log.v("mytag", "this is a test to see if it clicks for maps");
+
+                Uri endcodedGoogleMapsString = Uri.parse("google.navigation:q=" + c.clientAddress);
+                Intent googleMapsIntent = new Intent(Intent.ACTION_VIEW, endcodedGoogleMapsString);
+                googleMapsIntent.setPackage("com.google.android.apps.maps");
+                startActivity(googleMapsIntent);
+
+            }
+        });
+
+        t1.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                highlightRed(cv, t1, c);
+
+                return true;
+            }
+        });
+
+
+        t2.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                highlightRed(cv, t2, c);
+
+                return true;
+            }
+        });
+
+        t3.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+
+                highlightRed(cv, t3, c);
+                return true;
+            }
+        });
+
+        t1.setLayoutParams(paramOfTextViews);
+        t2.setLayoutParams(paramOfTextViews);
+        t3.setLayoutParams(paramOfTextViews);
+
+       // highlightRed(cv, t1, c);
+
+
+
+
+
+
         l.addView(t1);
         l.addView(t2);
         l.addView(t3);
@@ -173,26 +257,60 @@ public class ClientsActivity extends AppCompatActivity {
         cv.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View view) {
-                if(!selected || list.getChildAt(selectedIndex) == cv){
-                    if (cv.getCardBackgroundColor().getDefaultColor() == Color.RED) {
-                        cv.setCardBackgroundColor(Color.WHITE);
-                        remove.setVisibility(View.GONE);
-                        selected = false;
-                    } else {
-                        selectedIndex = list.indexOfChild(cv);
-                        selectedId = ids.get(t1.getText().toString());
-                        if(selectedId == null){
-                            selectedId= ids.get(c.clientName);
-                        }
-                        cv.setCardBackgroundColor(Color.RED);
-                        remove.setVisibility(View.VISIBLE);
-                        selected = true;
-                    }
-                    return false;
-                }
+//                if(!selected || list.getChildAt(selectedIndex) == cv){
+//                    if (cv.getCardBackgroundColor().getDefaultColor() == Color.RED) {
+//                        cv.setCardBackgroundColor(Color.WHITE);
+//                        remove.setVisibility(View.GONE);
+//                        selected = false;
+//                    } else {
+//                        selectedIndex = list.indexOfChild(cv);
+//                        selectedId = ids.get(t1.getText().toString());
+//                        if(selectedId == null){
+//                            selectedId= ids.get(c.clientName);
+//                        }
+//                        Log.v("mytag", "In onLongClick. selectedId: " + selectedId);
+//                        cv.setCardBackgroundColor(Color.RED);
+//                        remove.setVisibility(View.VISIBLE);
+//                        selected = true;
+//                    }
+//                    return false;
+//                }
+//                return false;
+                // }
+
+
+
+
                 return false;
+
             }
         });
+
+
+    }
+
+
+    public void highlightRed(CardView cv, TextView textview, Client c){
+
+        if(!selected || list.getChildAt(selectedIndex) == cv){
+            if (cv.getCardBackgroundColor().getDefaultColor() == Color.RED) {
+                cv.setCardBackgroundColor(Color.WHITE);
+                remove.setVisibility(View.GONE);
+                selected = false;
+            } else {
+                selectedIndex = list.indexOfChild(cv);
+                selectedId = ids.get(textview.getText().toString());
+                if(selectedId == null){
+                    selectedId= ids.get(c.clientName);
+                }
+                Log.v("mytag", "In onLongClick. selectedId: " + selectedId);
+                cv.setCardBackgroundColor(Color.RED);
+                remove.setVisibility(View.VISIBLE);
+                selected = true;
+            }
+
+        }
+
     }
 
     public void deleteClient(View v) {

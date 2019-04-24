@@ -10,23 +10,30 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
@@ -81,16 +88,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button signOut;
     private TextView Name, Email;
     private ImageView profilepic;
+    private Timer timer;
 
     private GoogleApiClient locationClient;
     private Geocoder g;
 
     private LinearLayout send;
 
+    public String _path;
+
     public ArrayList<String> addresses;
     private ArrayList<Fence> fences;
     private boolean wasInFence;
-    private Timer timer;
+
     private boolean timerRunning;
     private String jobTime;
 
@@ -327,24 +337,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //be automated to start and stop based on the Geofence.
     public void startTimer() {
 
-
         timer = new Timer();
 
             startTime = System.currentTimeMillis();
 
-            timer.scheduleAtFixedRate(new TimerTask() {
 
+
+
+            timer.scheduleAtFixedRate(new TimerTask() {
 
                 @Override
                 public void run() {
 
+
+                    runOnUiThread(new Runnable() {
+
+                        @Override
+                        public void run() {
+
+
+                    //long minutesStart = TimeUnit.MILLISECONDS.toMinutes(startTime);
+                    //long secondsStart = TimeUnit.MILLISECONDS.toSeconds(startTime);
                     long secondsCalc = TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - startTime);
 
+                    Log.v("MYTAG", secondsCalc + "");
 
                     timerTV = findViewById(R.id.timer);
                     if (secondsCalc % 60 == 0) {
                         minute++;
                     }
+
                     if (minute >= 10) {
                         if (secondsCalc % 60 < 10) {
                             timerTV.setText(minute + ":" + "0" + secondsCalc % 60);
@@ -361,8 +383,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
 
                     // Your database code here
+
+                        }
+                    });
                 }
+
             }, 1000, 1000);    /// set to run every second
+
+
+
 
 
 
@@ -382,7 +411,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void takePicture(View v) {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         // Create a File reference for the file of the image taken in the Camera application
-        confImgFile = getPhotoUri(System.currentTimeMillis() + ".jpg");
+        //confImgFile = getPhotoUri(System.currentTimeMillis() + ".jpg");
+        confImgFile = getPhotoUri(  "picture.jpg");
+
+        //String path = context.getFilesDir().getAbsolutePath();
+
+
+
+
+
+
 
         // wrap File object into a content provider
         Uri fileProvider = FileProvider.getUriForFile(this, this.getApplicationContext().getPackageName() + ".provider", confImgFile);
@@ -407,13 +445,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (requestCode == IMAGE_CODE) {
             if (resultCode == RESULT_OK) {
                 Bitmap takenImage = BitmapFactory.decodeFile(confImgFile.getAbsolutePath());
+
+                _path = confImgFile.getAbsolutePath();
+
+                final Mail mail = new Mail(_path, "picture.jpg");
+
+                Log.v("MyTAGE","Made new mail object" );
+
+
+                Thread thread = new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try  {
+
+                try {
+
+                    mail.send();
+
+                    Log.v("MyTAGE","Email is sent" );
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+
+                    Log.v("MyTAGE","Problem sending email" );
+
+
+
+                }
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                thread.start();
+
             } else { // Result was a failure
                 Toast.makeText(this, "Picture wasn't taken!", Toast.LENGTH_SHORT).show();
             }
-        } else {
+        }
+
+        else{
 
 
-            if (REQ_Code == requestCode) {
+            if(REQ_Code == requestCode){
 
                 GoogleSignInResult resultOfGoogleSignIn = Auth.GoogleSignInApi.getSignInResultFromIntent(x);
                 handleResult(resultOfGoogleSignIn);
@@ -485,6 +563,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+
+    public void pushTestData(View v) {
+        EditText t = findViewById(R.id.text);
+        String s = t.getText().toString();
+
+        dbRef.push().setValue(s);
+    }
+
     @Override
     public void onClick(View v) {
 
@@ -505,7 +591,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void signIn() {
+    private void signIn(){
 
 
         Intent intent = Auth.GoogleSignInApi.getSignInIntent(googleApiClient);
@@ -514,19 +600,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private void signOut() {
+    private void signOut(){
 
         Auth.GoogleSignInApi.signOut(googleApiClient).setResultCallback(new ResultCallback<Status>() {
             @Override
             public void onResult(@NonNull Status status) {
-                updateUI(false);
+                 updateUI(false);
             }
         });
+
+
     }
 
-    private void handleResult(GoogleSignInResult result) {
+    private void handleResult(GoogleSignInResult result){
 
-        if (result.isSuccess()) {
+        if(result.isSuccess() ){
 
             GoogleSignInAccount signInAccount = result.getSignInAccount();
             String name = signInAccount.getDisplayName();
@@ -538,24 +626,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             //Glide.with(this).load(img_url).into(profilepic);
 
             updateUI(true);
-        } else {
+        }
+        else{
 
             updateUI(false);
         }
 
 
+
     }
 
-    private void updateUI(boolean isLogin) {
+    private void updateUI(boolean isLogin){
 
-        if (isLogin) {
-            Log.v("mytag", "in updateUI, isLogin");
+        if(isLogin){
+
             linearLayoutProfile.setVisibility(View.VISIBLE);
             linearLayoutSignIn.setVisibility(View.GONE);
             signIn.setVisibility(View.GONE);
-        } else {
+        }
+        else{
 
-            Log.v("mytag", "in updateUI, isnotLogin");
             linearLayoutProfile.setVisibility(View.GONE);
             linearLayoutSignIn.setVisibility(View.VISIBLE);
             signIn.setVisibility(View.VISIBLE);
@@ -564,30 +654,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+//
+//
+//
+//    }
 
-    public void sendEmail(View v) {
+    public void sendEmail(View v){
 
 
-        Log.v("MyTAGE", "about to go into thread");
+        Log.v("MyTAGE","about to go into thread" );
+
 
 
         Thread thread = new Thread(new Runnable() {
 
             @Override
             public void run() {
-                try {
+                try  {
 
 
-                    Log.v("MyTAGE", "Email method is called");
-                    Mail mail = new Mail();
+
+
+                    Log.v("MyTAGE","Email method is called" );
+                    //Mail mail = new Mail();
                     try {
-                        mail.send();
+                       // mail.send();
 
-                        Log.v("MyTAGE", "Email is sent");
+                        Log.v("MyTAGE","Email is sent" );
 
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+
 
 
                 } catch (Exception e) {
@@ -599,12 +699,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         thread.start();
 
 
+
+
+
+
+
+
+
+
+
+
+
+
     }
 
-    public void calendarIntent(View v) {
-        //Intent x = new Intent(this,ClientsActivity.class);
-        //startActivity(x);
+    public void calendarIntent(View v){
+
+        Intent x = new Intent(this,CalendarActivity.class);
+        startActivity(x);
     }
+
 
 
 }
